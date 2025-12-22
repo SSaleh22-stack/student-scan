@@ -88,6 +88,12 @@ export default function ScannerDashboard() {
       return;
     }
 
+    // Check if browser supports camera API
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError('Camera API not supported. Please use a modern browser with HTTPS.');
+      return;
+    }
+
     try {
       setScanning(true);
       setError('');
@@ -96,11 +102,32 @@ export default function ScannerDashboard() {
       const codeReader = new BrowserMultiFormatReader();
       codeReaderRef.current = codeReader;
 
+      // Request camera permission first
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
+      } catch (permissionError) {
+        if (permissionError instanceof Error) {
+          if (permissionError.name === 'NotAllowedError' || permissionError.name === 'PermissionDeniedError') {
+            throw new Error('Camera permission denied. Please allow camera access in your browser settings.');
+          } else if (permissionError.name === 'NotFoundError' || permissionError.name === 'DevicesNotFoundError') {
+            throw new Error('No camera found. Please connect a camera and try again.');
+          } else if (permissionError.name === 'NotReadableError' || permissionError.name === 'TrackStartError') {
+            throw new Error('Camera is already in use by another application.');
+          }
+        }
+        throw new Error('Failed to access camera. Please check your camera permissions.');
+      }
+
       const videoInputDevices = await codeReader.listVideoInputDevices();
+      
+      if (!videoInputDevices || videoInputDevices.length === 0) {
+        throw new Error('No camera devices found. Please connect a camera and refresh the page.');
+      }
+
       const selectedDeviceId = videoInputDevices[0]?.deviceId;
 
       if (!selectedDeviceId) {
-        throw new Error('No camera found');
+        throw new Error('No camera found. Please connect a camera and try again.');
       }
 
       await codeReader.decodeFromVideoDevice(
@@ -119,8 +146,14 @@ export default function ScannerDashboard() {
         }
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start camera');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to start camera';
+      setError(errorMessage);
       setScanning(false);
+      // Stop any ongoing scanning
+      if (codeReaderRef.current) {
+        codeReaderRef.current.reset();
+        codeReaderRef.current = null;
+      }
     }
   };
 
