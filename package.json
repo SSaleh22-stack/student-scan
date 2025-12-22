@@ -6,7 +6,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "migrate": "tsx scripts/migrate.ts"
+    "migrate": "tsx scripts/migrate.ts",
+    "check-admin": "tsx scripts/check-admin.ts",
+    "verify-admin": "tsx scripts/verify-admin.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.0",
@@ -22,6 +24,9 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
     "tsx": "^4.16.0",
     "typescript": "^5.5.3",
     "vite": "^5.3.1"

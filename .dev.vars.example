@@ -1,0 +1,9 @@
+# Environment variables for local development
+# Copy this file to .dev.vars and fill in your values
+
+# JWT Secret for token signing (use a secure random string)
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+
+# Database path (optional, defaults to ./student-scanner.db for local dev)
+# On Vercel, this should be /tmp/student-scanner.db
+DATABASE_PATH=./student-scanner.db
