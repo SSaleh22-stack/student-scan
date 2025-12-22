@@ -63,9 +63,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const secret = process.env.JWT_SECRET || 'default-secret-change-in-production';
       const token = await generateToken({ userId: user.id, role: user.role }, secret);
 
+      // Determine if we're in production (HTTPS)
       const isProduction = req.url?.includes('https://') || req.url?.includes('vercel.app');
       const secureFlag = isProduction ? 'Secure;' : '';
-      res.setHeader('Set-Cookie', `session=${token}; HttpOnly; ${secureFlag} SameSite=Lax; Path=/; Max-Age=86400`);
+      
+      // Set cookie with proper attributes
+      const cookieValue = `session=${token}; HttpOnly; ${secureFlag} SameSite=Lax; Path=/; Max-Age=86400`;
+      res.setHeader('Set-Cookie', cookieValue);
 
       return res.json({
         user: {
