@@ -19,7 +19,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  const pathArray = (req.query.path as string[]) || [];
+  // Handle path parameter - can be string or array depending on Vercel routing
+  let pathArray: string[] = [];
+  if (req.query.path) {
+    if (Array.isArray(req.query.path)) {
+      pathArray = req.query.path;
+    } else if (typeof req.query.path === 'string') {
+      // If it's a string, split by '/' to create array
+      pathArray = req.query.path.split('/').filter(Boolean);
+    }
+  }
   const route = pathArray.join('/');
 
   // Auth routes
