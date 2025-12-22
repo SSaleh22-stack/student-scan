@@ -31,6 +31,7 @@ export default function ScannerDashboard() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     loadSessions();
@@ -148,6 +149,7 @@ export default function ScannerDashboard() {
             video: true
           };
           stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+          streamRef.current = stream;
           
           // Enable autofocus after getting the stream
           if (stream) {
@@ -297,7 +299,6 @@ export default function ScannerDashboard() {
     // Tap-to-focus functionality
     if (!videoRef.current || !streamRef.current) return;
 
-    const video = videoRef.current;
     const videoTrack = streamRef.current.getVideoTracks()[0];
     
     if (!videoTrack || !videoTrack.getCapabilities) return;
