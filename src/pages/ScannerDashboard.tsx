@@ -356,6 +356,78 @@ export default function ScannerDashboard() {
     );
   }
 
+  // Full-screen scanning view
+  if (scanning) {
+    return (
+      <div className="fixed inset-0 bg-black z-50">
+        <div className="relative w-full h-full flex flex-col">
+          {/* Top bar with session info and stop button */}
+          <div className="absolute top-0 left-0 right-0 z-10 bg-black bg-opacity-50 text-white p-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-bold">{selectedSession?.title}</h2>
+                <p className="text-sm text-gray-300">Scans: {scanCount}</p>
+              </div>
+              <button
+                onClick={stopScanning}
+                className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 font-medium"
+              >
+                Stop Scanning
+              </button>
+            </div>
+          </div>
+
+          {/* Video with scanning overlay */}
+          <div className="flex-1 relative flex items-center justify-center">
+            <video
+              ref={videoRef}
+              className="w-full h-full object-cover"
+              autoPlay
+              playsInline
+            />
+            {/* Scanning line overlay */}
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+              {/* Scanning line */}
+              <div 
+                className="w-full h-1 bg-green-500 opacity-75 animate-pulse" 
+                style={{
+                  boxShadow: '0 0 20px rgba(34, 197, 94, 0.9)'
+                }}
+              ></div>
+              {/* Corner guides */}
+              <div 
+                className="absolute inset-0 border-4 border-green-500" 
+                style={{
+                  borderStyle: 'dashed',
+                  opacity: 0.7
+                }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Scan Result Popup */}
+          {showScanResult && lastScanned && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black bg-opacity-70">
+              <div className="bg-white rounded-lg shadow-xl p-8 max-w-md mx-4 animate-bounce">
+                <div className="text-center">
+                  <div className="mb-4">
+                    <svg className="w-16 h-16 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">Scan Successful!</h3>
+                  <p className="text-lg text-gray-600 mb-1">Student Number:</p>
+                  <p className="text-3xl font-bold text-blue-600 mb-4">{lastScanned}</p>
+                  <p className="text-sm text-gray-500">Continue scanning...</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm border-b">
