@@ -58,7 +58,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: 'Invalid input', details: error.errors });
       }
-      return res.status(500).json({ error: 'Login failed' });
+      console.error('Login error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return res.status(500).json({ error: 'Login failed', details: errorMessage });
     }
   }
 

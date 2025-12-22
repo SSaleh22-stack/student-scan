@@ -2,16 +2,24 @@
 
 import { neon } from '@neondatabase/serverless';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set');
-}
+// Lazy initialization to avoid throwing errors at module load time
+let sql: ReturnType<typeof neon> | null = null;
 
-const sql = neon(process.env.DATABASE_URL);
+function getSql() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL environment variable is not set. Please configure it in Vercel environment variables.');
+  }
+  if (!sql) {
+    sql = neon(process.env.DATABASE_URL);
+  }
+  return sql;
+}
 
 // Helper function to execute raw SQL queries
 // Neon uses PostgreSQL $1, $2, $3... placeholders
 export async function query<T = any>(queryText: string, params?: any[]): Promise<T[]> {
-  const result = await sql(queryText, params || []);
+  const db = getSql();
+  const result = await db(queryText, params || []);
   return result as T[];
 }
 
