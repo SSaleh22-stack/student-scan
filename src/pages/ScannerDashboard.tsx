@@ -244,29 +244,46 @@ export default function ScannerDashboard() {
       // Ultra-fast scanning - scan every 30ms for maximum speed
       (codeReader as any).timeBetweenDecodingAttempts = 30;
 
-      // Use continuous scanning with optimized settings
+      // Use continuous scanning optimized for fast multiple scans
+      let lastScannedNumber = '';
+      let scanCooldown = false;
+      
       await codeReader.decodeFromVideoDevice(
         selectedDeviceId,
         videoRef.current,
         async (result, err) => {
           if (result) {
             const studentNumber = result.getText();
-            // Play sound
+            
+            // Prevent duplicate scans within 1 second
+            if (studentNumber === lastScannedNumber && scanCooldown) {
+              return;
+            }
+            
+            lastScannedNumber = studentNumber;
+            scanCooldown = true;
+            setTimeout(() => {
+              scanCooldown = false;
+              lastScannedNumber = '';
+            }, 1000);
+            
+            // Play sound immediately
             playScanSound();
             // Show popup with result
             setLastScanned(studentNumber);
             setShowScanResult(true);
-            // Auto-hide popup after 2 seconds and continue scanning
+            // Auto-hide popup after 1.5 seconds for faster scanning
             setTimeout(() => {
               setShowScanResult(false);
-            }, 2000);
-            // Process the scan
-            await handleScan(studentNumber);
-            // Continue scanning automatically
+            }, 1500);
+            // Process the scan (non-blocking)
+            handleScan(studentNumber).catch(() => {
+              // Silent error handling - don't block scanning
+            });
+            // Continue scanning immediately
           }
           if (err && err.name !== 'NotFoundException') {
-            // NotFoundException is normal when no barcode is visible
-            console.error('Scan error:', err);
+            // NotFoundException is normal when no barcode is visible - ignore it
           }
         }
       );
