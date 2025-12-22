@@ -41,6 +41,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         is_active: boolean;
       }>('SELECT * FROM users WHERE username = $1', [username]);
 
+      console.log('User found:', !!user);
+
       if (!user || !(await verifyPassword(password, user.password_hash))) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
@@ -120,8 +122,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     } catch (error) {
       console.error('Auth/me error:', error);
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return res.status(500).json({ error: 'Failed to get user', details: errorMessage });
+      const errorName = error instanceof Error ? error.name : 'UnknownError';
+      return res.status(500).json({ 
+        error: 'Failed to get user', 
+        details: errorMessage,
+        errorType: errorName
+      });
     }
   }
 
