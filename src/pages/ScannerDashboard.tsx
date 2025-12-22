@@ -160,27 +160,46 @@ export default function ScannerDashboard() {
           await videoRef.current.play();
         }
       } catch (permissionError) {
-        // If rear camera fails, try any camera
+        // If rear camera fails, try any camera with maximum native quality
         try {
           const fallbackConstraints: MediaStreamConstraints = {
-            video: true
+            video: {
+              // No constraints - let camera use native/highest quality
+            }
           };
           stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
           streamRef.current = stream;
           
-          // Enable autofocus after getting the stream
+          // Get maximum quality from camera capabilities
           if (stream) {
             const videoTrack = stream.getVideoTracks()[0];
-            if (videoTrack && videoTrack.applyConstraints) {
-              try {
-                await videoTrack.applyConstraints({
-                  advanced: [
-                    { focusMode: 'continuous' } as any
-                  ]
-                });
-              } catch (focusError) {
-                // Focus not supported, continue without it
-                console.log('Autofocus not supported on this device');
+            if (videoTrack) {
+              const capabilities = videoTrack.getCapabilities() as any;
+              
+              // Try to set maximum resolution if available - use phone's native quality
+              if (capabilities.width && capabilities.height) {
+                try {
+                  await videoTrack.applyConstraints({
+                    width: { ideal: capabilities.width.max || 4096 },
+                    height: { ideal: capabilities.height.max || 2160 },
+                    frameRate: { ideal: capabilities.frameRate?.max || 60 }
+                  });
+                } catch (e) {
+                  // If max resolution fails, camera will use its default native quality
+                }
+              }
+              
+              // Enable continuous autofocus
+              if (videoTrack.applyConstraints) {
+                try {
+                  await videoTrack.applyConstraints({
+                    advanced: [
+                      { focusMode: 'continuous' } as any
+                    ]
+                  });
+                } catch (focusError) {
+                  // Focus not supported, continue without it
+                }
               }
             }
           }
