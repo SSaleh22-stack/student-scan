@@ -38,9 +38,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
         }
       } else {
+        // 401 is expected when not logged in - silently handle it
         setUser(null);
       }
-    } catch {
+    } catch (error) {
+      // Network errors are expected - silently handle them
       setUser(null);
     } finally {
       setLoading(false);
