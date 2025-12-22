@@ -26,6 +26,8 @@ export default function ScannerDashboard() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [scanCount, setScanCount] = useState(0);
+  const [showScanResult, setShowScanResult] = useState(false);
+  const [lastScanned, setLastScanned] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
@@ -124,7 +126,17 @@ export default function ScannerDashboard() {
         throw new Error('No camera devices found. Please connect a camera and refresh the page.');
       }
 
-      const selectedDeviceId = videoInputDevices[0]?.deviceId;
+      // Prefer rear camera (usually labeled as "back" or "environment")
+      let selectedDevice = videoInputDevices[0];
+      for (const device of videoInputDevices) {
+        const label = device.label.toLowerCase();
+        if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
+          selectedDevice = device;
+          break;
+        }
+      }
+
+      const selectedDeviceId = selectedDevice?.deviceId;
 
       if (!selectedDeviceId) {
         throw new Error('No camera found. Please connect a camera and try again.');
@@ -136,8 +148,18 @@ export default function ScannerDashboard() {
         async (result, err) => {
           if (result) {
             const studentNumber = result.getText();
+            // Play sound
+            playScanSound();
+            // Show popup with result
+            setLastScanned(studentNumber);
+            setShowScanResult(true);
+            // Auto-hide popup after 2 seconds and continue scanning
+            setTimeout(() => {
+              setShowScanResult(false);
+            }, 2000);
+            // Process the scan
             await handleScan(studentNumber);
-            // Continue scanning
+            // Continue scanning automatically
           }
           if (err && err.name !== 'NotFoundException') {
             // NotFoundException is normal when no barcode is visible
@@ -165,6 +187,24 @@ export default function ScannerDashboard() {
     setScanning(false);
   };
 
+  const playScanSound = () => {
+    // Create a beep sound using Web Audio API
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.frequency.value = 800; // Higher pitch for success
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.2);
+  };
+
   const handleScan = async (studentNumber: string) => {
     if (!selectedSession) return;
 
@@ -190,7 +230,7 @@ export default function ScannerDashboard() {
         setSuccess(`Scanned: ${studentNumber}`);
         setError('');
         loadScans();
-        setTimeout(() => setSuccess(''), 2000);
+        // Don't clear success message here - let the popup handle it
       } else if (res.status === 409) {
         setError(`Already scanned: ${studentNumber}`);
         setTimeout(() => setError(''), 3000);
@@ -339,6 +379,25 @@ export default function ScannerDashboard() {
             )}
           </div>
         </div>
+
+        {/* Scan Result Popup */}
+        {showScanResult && lastScanned && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg shadow-xl p-8 max-w-md mx-4 animate-bounce">
+              <div className="text-center">
+                <div className="mb-4">
+                  <svg className="w-16 h-16 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">Scan Successful!</h3>
+                <p className="text-lg text-gray-600 mb-1">Student Number:</p>
+                <p className="text-3xl font-bold text-blue-600 mb-4">{lastScanned}</p>
+                <p className="text-sm text-gray-500">Continue scanning...</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Manual Input</h2>
