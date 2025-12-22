@@ -118,21 +118,38 @@ export default function ScannerDashboard() {
         };
         
         stream = await navigator.mediaDevices.getUserMedia(constraints);
+        streamRef.current = stream;
         
-        // Enable autofocus after getting the stream
+        // Get the actual camera capabilities and use maximum native quality
         if (stream) {
           const videoTrack = stream.getVideoTracks()[0];
-          if (videoTrack && videoTrack.applyConstraints) {
-            try {
-              // Try to enable continuous autofocus
-              await videoTrack.applyConstraints({
-                advanced: [
-                  { focusMode: 'continuous' } as any
-                ]
-              });
-            } catch (focusError) {
-              // Focus not supported, continue without it
-              console.log('Autofocus not supported on this device');
+          if (videoTrack) {
+            const capabilities = videoTrack.getCapabilities() as any;
+            
+            // Try to set maximum resolution if available - use phone's native quality
+            if (capabilities.width && capabilities.height) {
+              try {
+                await videoTrack.applyConstraints({
+                  width: { ideal: capabilities.width.max || 4096 },
+                  height: { ideal: capabilities.height.max || 2160 },
+                  frameRate: { ideal: capabilities.frameRate?.max || 60 }
+                });
+              } catch (e) {
+                // If max resolution fails, camera will use its default native quality
+              }
+            }
+            
+            // Enable continuous autofocus for better scanning quality
+            if (videoTrack.applyConstraints) {
+              try {
+                await videoTrack.applyConstraints({
+                  advanced: [
+                    { focusMode: 'continuous' } as any
+                  ]
+                });
+              } catch (focusError) {
+                // Focus not supported, continue without it
+              }
             }
           }
         }
