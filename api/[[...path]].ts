@@ -72,42 +72,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (route === 'auth/me' && req.method === 'GET') {
-    const cookie = req.headers.cookie;
-    if (!cookie) {
-      return res.status(401).json({ error: 'Unauthorized' });
+    try {
+      const cookie = req.headers.cookie;
+      if (!cookie) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const match = cookie.match(/session=([^;]+)/);
+      if (!match) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const token = match[1];
+      const secret = process.env.JWT_SECRET || 'default-secret-change-in-production';
+      const payload = await verifyToken(token, secret);
+
+      if (!payload) {
+        return res.status(401).json({ error: 'Invalid or expired token' });
+      }
+
+      const user = await queryOne<{
+        id: string;
+        username: string;
+        role: string;
+        is_active: boolean;
+      }>('SELECT id, username, role, is_active FROM users WHERE id = $1', [payload.userId]);
+
+      if (!user || !user.is_active) {
+        return res.status(401).json({ error: 'User not found or inactive' });
+      }
+
+      return res.json({
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+        },
+      });
+    } catch (error) {
+      console.error('Auth/me error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return res.status(500).json({ error: 'Failed to get user', details: errorMessage });
     }
-
-    const match = cookie.match(/session=([^;]+)/);
-    if (!match) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const token = match[1];
-    const secret = process.env.JWT_SECRET || 'default-secret-change-in-production';
-    const payload = await verifyToken(token, secret);
-
-    if (!payload) {
-      return res.status(401).json({ error: 'Invalid or expired token' });
-    }
-
-    const user = await queryOne<{
-      id: string;
-      username: string;
-      role: string;
-      is_active: boolean;
-    }>('SELECT id, username, role, is_active FROM users WHERE id = $1', [payload.userId]);
-
-    if (!user || !user.is_active) {
-      return res.status(401).json({ error: 'User not found or inactive' });
-    }
-
-    return res.json({
-      user: {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-      },
-    });
   }
 
   // Admin routes - require ADMIN role
