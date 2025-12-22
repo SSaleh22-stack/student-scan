@@ -5,17 +5,10 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',
-    chunkSizeWarningLimit: 1000, // Increase limit to 1000 KB (1 MB)
-    assetsDir: 'assets',
-    rollupOptions: {
-      output: {
-        assetFileNames: 'assets/[name].[ext]',
-      },
-    },
+    chunkSizeWarningLimit: 1000,
   },
   server: {
     port: 5173,
   },
-  base: '/',
 });
 
