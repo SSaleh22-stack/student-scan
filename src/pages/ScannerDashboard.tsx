@@ -350,16 +350,38 @@ export default function ScannerDashboard() {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Camera Scanner</h2>
           <div className="mb-4">
+            <div className="relative w-full max-w-md mx-auto">
               <video
                 ref={videoRef}
-                className="w-full max-w-md mx-auto rounded-lg border-2 border-gray-300"
+                className="w-full rounded-lg border-2 border-gray-300"
                 style={{ display: scanning ? 'block' : 'none' }}
               />
+              {scanning && (
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                  {/* Scanning line overlay */}
+                  <div 
+                    className="w-full h-1 bg-green-500 opacity-75 animate-pulse" 
+                    style={{
+                      boxShadow: '0 0 10px rgba(34, 197, 94, 0.8)'
+                    }}
+                  ></div>
+                  {/* Corner guides */}
+                  <div 
+                    className="absolute inset-0 border-2 border-green-500 rounded-lg" 
+                    style={{
+                      borderStyle: 'dashed',
+                      borderWidth: '2px',
+                      opacity: 0.6
+                    }}
+                  ></div>
+                </div>
+              )}
               {!scanning && (
-                <div className="w-full max-w-md mx-auto h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
                   <p className="text-gray-500">Camera preview will appear here</p>
                 </div>
               )}
+            </div>
           </div>
           <div className="flex gap-4 justify-center">
             {!scanning ? (
