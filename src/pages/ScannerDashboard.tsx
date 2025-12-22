@@ -295,7 +295,8 @@ export default function ScannerDashboard() {
       
       // Much slower scanning interval for maximum detection of difficult barcodes
       // More time per frame = better analysis and multiple attempts
-      (codeReader as any).timeBetweenDecodingAttempts = 500;
+      // Increased to 800ms for very difficult barcodes
+      (codeReader as any).timeBetweenDecodingAttempts = 800;
 
       // Use continuous scanning optimized for fast multiple scans
       let lastScannedNumber = '';
