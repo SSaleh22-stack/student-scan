@@ -553,63 +553,65 @@ export default function ScannerDashboard() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Manual Input</h2>
-          <form onSubmit={handleManualSubmit} className="flex gap-2">
+        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4">Manual Input</h2>
+          <form onSubmit={handleManualSubmit} className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
               placeholder="Enter student number"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               type="submit"
-              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-medium"
+              className="bg-green-600 text-white px-4 py-2.5 sm:py-2 rounded-lg hover:bg-green-700 font-medium text-sm sm:text-base"
             >
-              Submit
+              Scan Manually
             </button>
           </form>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Recent Scans</h2>
+        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+            <h2 className="text-lg sm:text-xl font-semibold">Recent Scans ({scanCount})</h2>
             <button
               onClick={finishSession}
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+              className="bg-gray-600 text-white px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg hover:bg-gray-700 font-medium w-full sm:w-auto"
             >
               Finish Session
             </button>
           </div>
           <div className="max-h-96 overflow-y-auto">
               {scans.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No scans yet</p>
+                <p className="text-sm sm:text-base text-gray-500 text-center py-8">No scans yet for this session.</p>
               ) : (
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50 sticky top-0">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Student Number
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Scanned At
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {scans.map((scan) => (
-                      <tr key={scan.id}>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                          {scan.scanned_student_number}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(scan.scanned_at).toLocaleTimeString()}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Student Number
+                        </th>
+                        <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Scanned At
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {scans.map((scan) => (
+                        <tr key={scan.id}>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
+                            {scan.scanned_student_number}
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                            {new Date(scan.scanned_at).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
           </div>
         </div>
