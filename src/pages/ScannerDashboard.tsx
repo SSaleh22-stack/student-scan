@@ -108,12 +108,14 @@ export default function ScannerDashboard() {
       // Request camera permission first with specific constraints
       let stream: MediaStream | null = null;
       try {
-        // Try to get rear camera first
+        // Try to get rear camera first with higher quality for better scanning
         const constraints: MediaStreamConstraints = {
           video: {
             facingMode: { ideal: 'environment' }, // Prefer rear camera
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+            width: { ideal: 1920, min: 1280 },
+            height: { ideal: 1080, min: 720 },
+            // Better quality settings for barcode scanning
+            aspectRatio: { ideal: 16/9 }
           }
         };
         
@@ -539,23 +541,14 @@ export default function ScannerDashboard() {
             <div className="flex justify-between items-center">
               <div className="flex-1 min-w-0 pr-2">
                 <h2 className="text-sm sm:text-lg font-bold truncate">{selectedSession?.title}</h2>
-                <p className="text-xs sm:text-sm text-gray-300">Scans: {scanCount}</p>
+                <p className="text-xs sm:text-sm text-gray-300">Scans: {scanCount} | Tap screen to focus</p>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={triggerAutofocus}
-                  className="bg-blue-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-blue-700 font-medium text-xs sm:text-sm whitespace-nowrap"
-                  title="Focus Camera"
-                >
-                  Focus
-                </button>
-                <button
-                  onClick={stopScanning}
-                  className="bg-red-600 text-white px-3 sm:px-6 py-1.5 sm:py-2 rounded-lg hover:bg-red-700 font-medium text-xs sm:text-sm whitespace-nowrap"
-                >
-                  Stop
-                </button>
-              </div>
+              <button
+                onClick={stopScanning}
+                className="bg-red-600 text-white px-3 sm:px-6 py-1.5 sm:py-2 rounded-lg hover:bg-red-700 font-medium text-xs sm:text-sm whitespace-nowrap"
+              >
+                Stop
+              </button>
             </div>
           </div>
 
