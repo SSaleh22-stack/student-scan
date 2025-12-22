@@ -2,7 +2,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { queryOne } from '../lib/db';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(_req: VercelRequest, res: VercelResponse) {
   try {
     console.log('Testing database connection...');
     console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
