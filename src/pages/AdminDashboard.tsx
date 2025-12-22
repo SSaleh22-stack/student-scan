@@ -288,14 +288,14 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <h1 className="text-xl font-bold">Admin Dashboard</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">Welcome, {user?.username}</span>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+          <div className="flex justify-between h-14 sm:h-16 items-center">
+            <h1 className="text-lg sm:text-xl font-bold">Admin Dashboard</h1>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <span className="text-xs sm:text-sm text-gray-600 hidden sm:inline">Welcome, {user?.username}</span>
               <button
                 onClick={logout}
-                className="text-sm text-red-600 hover:text-red-700"
+                className="text-xs sm:text-sm text-red-600 hover:text-red-700 px-2 sm:px-0 py-1 sm:py-0"
               >
                 Logout
               </button>
@@ -304,18 +304,18 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
         {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded text-sm">
             {error}
           </div>
         )}
 
-        <div className="border-b border-gray-200 mb-6">
-          <nav className="flex space-x-8">
+        <div className="border-b border-gray-200 mb-4 sm:mb-6 overflow-x-auto">
+          <nav className="flex space-x-4 sm:space-x-8 min-w-max">
             <button
               onClick={() => setActiveTab('users')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'users'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -325,7 +325,7 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={() => setActiveTab('sessions')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'sessions'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -335,7 +335,7 @@ export default function AdminDashboard() {
             </button>
             {activeTab === 'session-detail' && (
               <button
-                className="py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600"
+                className="py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm border-blue-500 text-blue-600 whitespace-nowrap"
               >
                 Session Details
               </button>
@@ -345,30 +345,30 @@ export default function AdminDashboard() {
 
         {activeTab === 'users' && (
           <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Scanner Users</h2>
+            <div className="flex justify-between items-center mb-3 sm:mb-4">
+              <h2 className="text-base sm:text-lg font-semibold">Scanner Users</h2>
               <button
                 onClick={() => setShowCreateUserModal(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                className="bg-blue-600 text-white px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-md hover:bg-blue-700 font-medium"
               >
                 + Create User
               </button>
             </div>
 
-            <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="bg-white shadow rounded-lg overflow-hidden overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Username
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">
                       Created
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Actions
                     </th>
                   </tr>
@@ -376,8 +376,8 @@ export default function AdminDashboard() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {users.map((u) => (
                     <tr key={u.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">{u.username}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">{u.username}</td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <span
                           className={`px-2 py-1 text-xs rounded ${
                             u.is_active
@@ -388,18 +388,18 @@ export default function AdminDashboard() {
                           {u.is_active ? 'Active' : 'Disabled'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden sm:table-cell">
                         {new Date(u.created_at).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
                         {u.role === 'ADMIN' ? (
-                          <span className="text-gray-400 text-sm">Protected</span>
+                          <span className="text-gray-400">Protected</span>
                         ) : (
                           <button
                             onClick={() => toggleUserStatus(u.id, u.is_active)}
                             className={`${
                               u.is_active ? 'text-red-600' : 'text-green-600'
-                            } hover:underline`}
+                            } hover:underline font-medium`}
                           >
                             {u.is_active ? 'Disable' : 'Enable'}
                           </button>
@@ -415,29 +415,29 @@ export default function AdminDashboard() {
 
         {activeTab === 'sessions' && (
           <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Sessions</h2>
+            <div className="flex justify-between items-center mb-3 sm:mb-4">
+              <h2 className="text-base sm:text-lg font-semibold">Sessions</h2>
               <button
                 onClick={() => setShowCreateSessionModal(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                className="bg-blue-600 text-white px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-md hover:bg-blue-700 font-medium"
               >
                 + Create Session
               </button>
             </div>
-            <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="bg-white shadow rounded-lg overflow-hidden overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Title
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">
                       Created
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Actions
                     </th>
                   </tr>
@@ -445,10 +445,10 @@ export default function AdminDashboard() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {sessions.map((s) => (
                     <tr key={s.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
                         {s.title}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <span
                           className={`px-2 py-1 text-xs rounded ${
                             s.is_open
@@ -459,31 +459,33 @@ export default function AdminDashboard() {
                           {s.is_open ? 'Open' : 'Closed'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden sm:table-cell">
                         {new Date(s.created_at).toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                        <button
-                          onClick={() => viewSessionDetails(s)}
-                          className="text-blue-600 hover:underline"
-                        >
-                          View
-                        </button>
-                        <button
-                          onClick={() => toggleSessionStatus(s.id, s.is_open)}
-                          className="text-gray-600 hover:underline"
-                        >
-                          {s.is_open ? 'Close' : 'Open'}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedSessionForAssignment(s);
-                            setShowAssignScannersModal(true);
-                          }}
-                          className="text-green-600 hover:underline"
-                        >
-                          Assign Scanners
-                        </button>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
+                        <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 sm:space-x-2">
+                          <button
+                            onClick={() => viewSessionDetails(s)}
+                            className="text-blue-600 hover:underline text-left"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => toggleSessionStatus(s.id, s.is_open)}
+                            className="text-gray-600 hover:underline text-left"
+                          >
+                            {s.is_open ? 'Close' : 'Open'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedSessionForAssignment(s);
+                              setShowAssignScannersModal(true);
+                            }}
+                            className="text-green-600 hover:underline text-left"
+                          >
+                            Assign
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -495,46 +497,46 @@ export default function AdminDashboard() {
 
         {activeTab === 'session-detail' && selectedSession && (
           <div>
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
               <div>
-                <h2 className="text-lg font-semibold">{selectedSession.title}</h2>
-                <p className="text-sm text-gray-500">
+                <h2 className="text-base sm:text-lg font-semibold">{selectedSession.title}</h2>
+                <p className="text-xs sm:text-sm text-gray-500">
                   Created: {new Date(selectedSession.created_at).toLocaleString()}
                 </p>
               </div>
-              <div className="space-x-2">
+              <div className="flex gap-2 w-full sm:w-auto">
                 <button
                   onClick={() => {
                     setActiveTab('sessions');
                     setSelectedSession(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm border border-gray-300 rounded-md hover:bg-gray-50 font-medium"
                 >
                   Back
                 </button>
                 <button
                   onClick={() => exportScans(selectedSession.id)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm bg-green-600 text-white rounded-md hover:bg-green-700 font-medium"
                 >
                   Export CSV
                 </button>
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <div className="px-6 py-4 bg-gray-50 border-b">
-                <p className="text-sm font-medium">Total Scans: {scans.length}</p>
+            <div className="bg-white shadow rounded-lg overflow-hidden overflow-x-auto">
+              <div className="px-3 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b">
+                <p className="text-xs sm:text-sm font-medium">Total Scans: {scans.length}</p>
               </div>
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Student Number
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">
                       Scanned By
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Scanned At
                     </th>
                   </tr>
@@ -542,13 +544,13 @@ export default function AdminDashboard() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {scans.map((scan) => (
                     <tr key={scan.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
                         {scan.scanned_student_number}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden sm:table-cell">
                         {scan.scanned_by_username}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                         {new Date(scan.scanned_at).toLocaleString()}
                       </td>
                     </tr>
@@ -561,9 +563,9 @@ export default function AdminDashboard() {
 
         {/* Create User Modal */}
         {showCreateUserModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-xl font-semibold mb-4">Create Scanner User</h3>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-lg sm:text-xl font-semibold mb-4">Create Scanner User</h3>
               <form onSubmit={createUser} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -574,7 +576,7 @@ export default function AdminDashboard() {
                     value={newUsername}
                     onChange={(e) => setNewUsername(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded-md"
                     placeholder="Enter username"
                   />
                 </div>
@@ -588,7 +590,7 @@ export default function AdminDashboard() {
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
                     minLength={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded-md"
                     placeholder="Enter password (min 4 characters)"
                   />
                 </div>
@@ -600,14 +602,14 @@ export default function AdminDashboard() {
                       setNewUsername('');
                       setNewPassword('');
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm border border-gray-300 rounded-md hover:bg-gray-50 font-medium"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 font-medium"
                   >
                     {loading ? 'Creating...' : 'Create User'}
                   </button>
@@ -619,9 +621,9 @@ export default function AdminDashboard() {
 
         {/* Create Session Modal */}
         {showCreateSessionModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-xl font-semibold mb-4">Create Session</h3>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-lg sm:text-xl font-semibold mb-4">Create Session</h3>
               <form onSubmit={createSession} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -632,7 +634,7 @@ export default function AdminDashboard() {
                     value={newSessionTitle}
                     onChange={(e) => setNewSessionTitle(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded-md"
                     placeholder="Enter session title"
                   />
                 </div>
@@ -643,7 +645,7 @@ export default function AdminDashboard() {
                   <textarea
                     value={newSessionNotes}
                     onChange={(e) => setNewSessionNotes(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 rounded-md"
                     rows={3}
                     placeholder="Enter notes..."
                   />
@@ -656,14 +658,14 @@ export default function AdminDashboard() {
                       setNewSessionTitle('');
                       setNewSessionNotes('');
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm border border-gray-300 rounded-md hover:bg-gray-50 font-medium"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 font-medium"
                   >
                     {loading ? 'Creating...' : 'Create Session'}
                   </button>
@@ -675,9 +677,9 @@ export default function AdminDashboard() {
 
         {/* Assign Scanners Modal */}
         {showAssignScannersModal && selectedSessionForAssignment && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-xl font-semibold mb-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-lg sm:text-xl font-semibold mb-4">
                 Assign Scanners to: {selectedSessionForAssignment.title}
               </h3>
               <AssignScannersModal
@@ -812,7 +814,7 @@ function AssignScannersModal({
           {selectedUnassignScanners.size > 0 && (
             <button
               onClick={handleUnassign}
-              className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 mb-4"
+              className="w-full px-3 sm:px-4 py-2 text-xs sm:text-sm bg-red-600 text-white rounded-md hover:bg-red-700 mb-4 font-medium"
             >
               Unassign ({selectedUnassignScanners.size})
             </button>
@@ -851,14 +853,14 @@ function AssignScannersModal({
       <div className="flex gap-2 justify-end">
         <button
           onClick={onClose}
-          className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+          className="px-3 sm:px-4 py-2 text-xs sm:text-sm border border-gray-300 rounded-md hover:bg-gray-50 font-medium"
         >
           Cancel
         </button>
         <button
           onClick={handleAssign}
           disabled={selectedScanners.size === 0}
-          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
           Assign {selectedScanners.size > 0 ? `(${selectedScanners.size})` : ''}
         </button>

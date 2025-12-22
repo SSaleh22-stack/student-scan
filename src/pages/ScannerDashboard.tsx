@@ -334,14 +334,14 @@ export default function ScannerDashboard() {
     return (
       <div className="min-h-screen bg-gray-50">
         <nav className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16 items-center">
-              <h1 className="text-xl font-bold">Scanner Dashboard</h1>
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-600">Welcome, {user?.username}</span>
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+            <div className="flex justify-between h-14 sm:h-16 items-center">
+              <h1 className="text-lg sm:text-xl font-bold">Scanner Dashboard</h1>
+              <div className="flex items-center gap-2 sm:gap-4">
+                <span className="text-xs sm:text-sm text-gray-600 hidden sm:inline">Welcome, {user?.username}</span>
                 <button
                   onClick={logout}
-                  className="text-sm text-red-600 hover:text-red-700"
+                  className="text-xs sm:text-sm text-red-600 hover:text-red-700 px-2 sm:px-0 py-1 sm:py-0"
                 >
                   Logout
                 </button>
@@ -350,24 +350,24 @@ export default function ScannerDashboard() {
           </div>
         </nav>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h2 className="text-2xl font-semibold mb-6">Select a Session</h2>
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">Select a Session</h2>
 
           {sessions.length === 0 ? (
-            <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-3 sm:px-4 py-2 sm:py-3 rounded text-sm">
               No assigned sessions available. Please contact an administrator.
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
               {sessions.map((session) => (
                 <div
                   key={session.id}
-                  className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition"
+                  className="bg-white rounded-lg shadow p-4 sm:p-6 cursor-pointer hover:shadow-md transition"
                   onClick={() => setSelectedSession(session)}
                 >
-                  <h3 className="text-lg font-semibold mb-2">{session.title}</h3>
+                  <h3 className="text-base sm:text-lg font-semibold mb-2">{session.title}</h3>
                   {session.notes && (
-                    <p className="text-sm text-gray-600 mb-2">{session.notes}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 mb-2">{session.notes}</p>
                   )}
                   <p className="text-xs text-gray-500">
                     Created: {new Date(session.created_at).toLocaleString()}
@@ -387,17 +387,17 @@ export default function ScannerDashboard() {
       <div className="fixed inset-0 bg-black z-50">
         <div className="relative w-full h-full flex flex-col">
           {/* Top bar with session info and stop button */}
-          <div className="absolute top-0 left-0 right-0 z-10 bg-black bg-opacity-50 text-white p-4">
+          <div className="absolute top-0 left-0 right-0 z-10 bg-black bg-opacity-50 text-white p-3 sm:p-4">
             <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-lg font-bold">{selectedSession?.title}</h2>
-                <p className="text-sm text-gray-300">Scans: {scanCount}</p>
+              <div className="flex-1 min-w-0 pr-2">
+                <h2 className="text-sm sm:text-lg font-bold truncate">{selectedSession?.title}</h2>
+                <p className="text-xs sm:text-sm text-gray-300">Scans: {scanCount}</p>
               </div>
               <button
                 onClick={stopScanning}
-                className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 font-medium"
+                className="bg-red-600 text-white px-3 sm:px-6 py-1.5 sm:py-2 rounded-lg hover:bg-red-700 font-medium text-xs sm:text-sm whitespace-nowrap"
               >
-                Stop Scanning
+                Stop
               </button>
             </div>
           </div>
@@ -432,18 +432,18 @@ export default function ScannerDashboard() {
 
           {/* Scan Result Popup */}
           {showScanResult && lastScanned && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black bg-opacity-70">
-              <div className="bg-white rounded-lg shadow-xl p-8 max-w-md mx-4 animate-bounce">
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black bg-opacity-70 p-4">
+              <div className="bg-white rounded-lg shadow-xl p-4 sm:p-8 max-w-md w-full mx-4 animate-bounce">
                 <div className="text-center">
-                  <div className="mb-4">
-                    <svg className="w-16 h-16 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="mb-3 sm:mb-4">
+                    <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">Scan Successful!</h3>
-                  <p className="text-lg text-gray-600 mb-1">Student Number:</p>
-                  <p className="text-3xl font-bold text-blue-600 mb-4">{lastScanned}</p>
-                  <p className="text-sm text-gray-500">Continue scanning...</p>
+                  <h3 className="text-lg sm:text-2xl font-bold text-gray-800 mb-2">Scan Successful!</h3>
+                  <p className="text-sm sm:text-lg text-gray-600 mb-1">Student Number:</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-blue-600 mb-3 sm:mb-4 break-all">{lastScanned}</p>
+                  <p className="text-xs sm:text-sm text-gray-500">Continue scanning...</p>
                 </div>
               </div>
             </div>
@@ -477,19 +477,19 @@ export default function ScannerDashboard() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded text-sm">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-3 sm:px-4 py-2 sm:py-3 rounded text-sm">
             {success}
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Camera Scanner</h2>
+        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4">Camera Scanner</h2>
           <div className="mb-4">
             <div className="relative w-full max-w-md mx-auto">
               <video
