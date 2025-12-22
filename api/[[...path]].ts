@@ -10,6 +10,15 @@ import { query, queryOne, execute } from '../lib/db';
 import { randomUUID } from 'crypto';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Log environment check (remove in production if needed)
+  if (!process.env.DATABASE_URL) {
+    console.error('DATABASE_URL is not set in environment variables');
+    return res.status(500).json({ 
+      error: 'Server configuration error', 
+      details: 'DATABASE_URL environment variable is not set. Please configure it in Vercel settings.' 
+    });
+  }
+
   const path = (req.query.path as string[]) || [];
   const route = path.join('/');
 
