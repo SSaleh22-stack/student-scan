@@ -1,8 +1,8 @@
 // Helper functions for API routes
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifyToken } from './jwt';
-import { queryOne } from './db';
+import { verifyToken } from './jwt.js';
+import { queryOne } from './db.js';
 
 export type User = {
   id: string;

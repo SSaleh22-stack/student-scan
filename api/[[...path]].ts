@@ -3,10 +3,10 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
-import { requireRole, getAuthUser } from '../lib/api-helpers';
-import { hashPassword, verifyPassword } from '../lib/auth';
-import { generateToken, verifyToken } from '../lib/jwt';
-import { query, queryOne, execute } from '../lib/db';
+import { requireRole, getAuthUser } from '../lib/api-helpers.js';
+import { hashPassword, verifyPassword } from '../lib/auth.js';
+import { generateToken, verifyToken } from '../lib/jwt.js';
+import { query, queryOne, execute } from '../lib/db.js';
 import { randomUUID } from 'crypto';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
