@@ -304,7 +304,7 @@ export default function ScannerDashboard() {
     if (!videoTrack || !videoTrack.getCapabilities) return;
 
     try {
-      const capabilities = videoTrack.getCapabilities();
+      const capabilities = videoTrack.getCapabilities() as any;
       
       // Check if focus is supported
       if (capabilities.focusMode && capabilities.focusMode.includes('manual')) {
