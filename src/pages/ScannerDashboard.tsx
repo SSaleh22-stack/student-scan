@@ -108,14 +108,12 @@ export default function ScannerDashboard() {
       // Request camera permission first with specific constraints
       let stream: MediaStream | null = null;
       try {
-        // Try to get rear camera first with higher quality for better scanning
+        // Try to get rear camera with native/highest quality - no quality reduction
         const constraints: MediaStreamConstraints = {
           video: {
             facingMode: { ideal: 'environment' }, // Prefer rear camera
-            width: { ideal: 1920, min: 1280 },
-            height: { ideal: 1080, min: 720 },
-            // Better quality settings for barcode scanning
-            aspectRatio: { ideal: 16/9 }
+            // Don't set width/height constraints - let camera use native resolution
+            // This ensures we get the best quality the phone can provide
           }
         };
         
