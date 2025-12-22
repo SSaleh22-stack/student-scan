@@ -105,109 +105,86 @@ export default function ScannerDashboard() {
       const codeReader = new BrowserMultiFormatReader();
       codeReaderRef.current = codeReader;
 
-      // Request camera permission first with specific constraints
+      // First, enumerate all cameras to find the rear camera
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      
+      // Find rear camera by device label
+      let rearCameraDeviceId: string | null = null;
+      for (const device of videoDevices) {
+        const label = device.label.toLowerCase();
+        // Check for rear camera indicators
+        if (label.includes('back') || 
+            label.includes('rear') || 
+            label.includes('environment') ||
+            label.includes('facing back') ||
+            label.includes('facing: back') ||
+            label.includes('back camera') ||
+            (label.includes('camera') && !label.includes('front') && !label.includes('user'))) {
+          rearCameraDeviceId = device.deviceId;
+          break;
+        }
+      }
+      
+      // If no rear camera found by label, try to get it by facingMode constraint
       let stream: MediaStream | null = null;
+      let videoTrack: MediaStreamTrack | null = null;
+      
       try {
-        // Try to get rear camera with native/highest quality - no quality reduction
-        const constraints: MediaStreamConstraints = {
-          video: {
-            facingMode: { ideal: 'environment' }, // Prefer rear camera
-            // Don't set width/height constraints - let camera use native resolution
-            // This ensures we get the best quality the phone can provide
-          }
-        };
-        
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-        streamRef.current = stream;
-        
-        // Get the actual camera capabilities and use maximum native quality
-        if (stream) {
-          const videoTrack = stream.getVideoTracks()[0];
-          if (videoTrack) {
-            const capabilities = videoTrack.getCapabilities() as any;
-            
-            // Try to set maximum resolution if available - use phone's native quality
-            if (capabilities.width && capabilities.height) {
-              try {
-                await videoTrack.applyConstraints({
-                  width: { ideal: capabilities.width.max || 4096 },
-                  height: { ideal: capabilities.height.max || 2160 },
-                  frameRate: { ideal: capabilities.frameRate?.max || 60 }
-                });
-              } catch (e) {
-                // If max resolution fails, camera will use its default native quality
+        // Try to get rear camera with explicit device ID if found
+        if (rearCameraDeviceId) {
+          try {
+            const constraints: MediaStreamConstraints = {
+              video: {
+                deviceId: { exact: rearCameraDeviceId },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+                frameRate: { ideal: 30 }
               }
-            }
-            
-            // Enable continuous autofocus for better scanning quality
-            if (videoTrack.applyConstraints) {
-              try {
-                await videoTrack.applyConstraints({
-                  advanced: [
-                    { focusMode: 'continuous' } as any
-                  ]
-                });
-              } catch (focusError) {
-                // Focus not supported, continue without it
+            };
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            videoTrack = stream.getVideoTracks()[0];
+          } catch (e) {
+            // If exact device ID fails, try with ideal
+            const constraints: MediaStreamConstraints = {
+              video: {
+                deviceId: { ideal: rearCameraDeviceId },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+                frameRate: { ideal: 30 }
               }
-            }
+            };
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            videoTrack = stream.getVideoTracks()[0];
           }
         }
         
-        // If we got a stream, attach it to the video element
-        if (videoRef.current && stream) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-        }
-      } catch (permissionError) {
-        // If rear camera fails, try any camera with maximum native quality
-        try {
-          const fallbackConstraints: MediaStreamConstraints = {
+        // If rear camera by ID failed, try facingMode
+        if (!stream || !videoTrack) {
+          const constraints: MediaStreamConstraints = {
             video: {
-              // No constraints - let camera use native/highest quality
+              facingMode: { exact: 'environment' }, // Force rear camera
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+              frameRate: { ideal: 30 }
             }
           };
-          stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
-          streamRef.current = stream;
-          
-          // Get maximum quality from camera capabilities
-          if (stream) {
-            const videoTrack = stream.getVideoTracks()[0];
-            if (videoTrack) {
-              const capabilities = videoTrack.getCapabilities() as any;
-              
-              // Try to set maximum resolution if available - use phone's native quality
-              if (capabilities.width && capabilities.height) {
-                try {
-                  await videoTrack.applyConstraints({
-                    width: { ideal: capabilities.width.max || 4096 },
-                    height: { ideal: capabilities.height.max || 2160 },
-                    frameRate: { ideal: capabilities.frameRate?.max || 60 }
-                  });
-                } catch (e) {
-                  // If max resolution fails, camera will use its default native quality
-                }
-              }
-              
-              // Enable continuous autofocus
-              if (videoTrack.applyConstraints) {
-                try {
-                  await videoTrack.applyConstraints({
-                    advanced: [
-                      { focusMode: 'continuous' } as any
-                    ]
-                  });
-                } catch (focusError) {
-                  // Focus not supported, continue without it
-                }
-              }
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          videoTrack = stream.getVideoTracks()[0];
+        }
+      } catch (permissionError) {
+        // If exact rear camera fails, try ideal
+        try {
+          const constraints: MediaStreamConstraints = {
+            video: {
+              facingMode: { ideal: 'environment' },
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+              frameRate: { ideal: 30 }
             }
-          }
-          
-          if (videoRef.current && stream) {
-            videoRef.current.srcObject = stream;
-            await videoRef.current.play();
-          }
+          };
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          videoTrack = stream.getVideoTracks()[0];
         } catch (fallbackError) {
           if (permissionError instanceof Error) {
             if (permissionError.name === 'NotAllowedError' || permissionError.name === 'PermissionDeniedError') {
@@ -216,42 +193,69 @@ export default function ScannerDashboard() {
               throw new Error('No camera found. Please connect a camera and try again.');
             } else if (permissionError.name === 'NotReadableError' || permissionError.name === 'TrackStartError') {
               throw new Error('Camera is already in use by another application.');
-            } else if (permissionError.name === 'OverconstrainedError') {
-              throw new Error('Camera constraints not supported. Trying with default settings...');
             }
           }
           throw new Error('Failed to access camera. Please check your camera permissions and try again.');
         }
       }
-
-      // Wait a bit for video to initialize
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const videoInputDevices = await codeReader.listVideoInputDevices();
       
-      if (!videoInputDevices || videoInputDevices.length === 0) {
-        throw new Error('No camera devices found. Please connect a camera and refresh the page.');
+      if (!stream || !videoTrack) {
+        throw new Error('Failed to access camera. Please try again.');
       }
-
-      // Prefer rear camera (usually labeled as "back" or "environment")
-      let selectedDevice = videoInputDevices[0];
-      for (const device of videoInputDevices) {
-        const label = device.label.toLowerCase();
-        if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
-          selectedDevice = device;
-          break;
+      
+      streamRef.current = stream;
+      
+      // Get camera capabilities and apply maximum quality
+      const capabilities = videoTrack.getCapabilities() as any;
+      
+      // Apply maximum quality settings
+      try {
+        const qualityConstraints: MediaTrackConstraints = {
+          width: capabilities.width?.max ? { ideal: capabilities.width.max } : { ideal: 1920 },
+          height: capabilities.height?.max ? { ideal: capabilities.height.max } : { ideal: 1080 },
+          frameRate: capabilities.frameRate?.max ? { ideal: capabilities.frameRate.max } : { ideal: 30 }
+        };
+        
+        await videoTrack.applyConstraints(qualityConstraints);
+      } catch (e) {
+        // If max quality fails, try high quality defaults
+        try {
+          await videoTrack.applyConstraints({
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            frameRate: { ideal: 30 }
+          });
+        } catch (e2) {
+          // Continue with default quality
         }
       }
+      
+      // Enable continuous autofocus
+      try {
+        await videoTrack.applyConstraints({
+          advanced: [
+            { focusMode: 'continuous' } as any
+          ]
+        });
+      } catch (focusError) {
+        // Focus not supported, continue without it
+      }
+      
+      // Attach stream to video element
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      
+      // Wait for video to initialize
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      const selectedDeviceId = selectedDevice?.deviceId;
+      // Get device ID from the active track
+      const settings = videoTrack.getSettings();
+      const selectedDeviceId = settings.deviceId as string;
 
       if (!selectedDeviceId) {
-        throw new Error('No camera found. Please connect a camera and try again.');
-      }
-
-      // Stop the initial stream before starting ZXing
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        throw new Error('Could not determine camera device. Please try again.');
       }
 
       // Configure for ultra-fast scanning
