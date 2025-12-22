@@ -263,9 +263,10 @@ export default function ScannerDashboard() {
       hints.set(DecodeHintType.TRY_HARDER, true); // Enable for better detection quality
       hints.set(DecodeHintType.ASSUME_GS1, false);
       hints.set(DecodeHintType.CHARACTER_SET, 'UTF-8');
+      // Enable pure barcode mode for better detection of standard barcodes
+      hints.set(DecodeHintType.PURE_BARCODE, false); // false = allow surrounding content
       hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-        BarcodeFormat.QR_CODE,
-        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_128,  // Most common, check first
         BarcodeFormat.CODE_39,
         BarcodeFormat.EAN_13,
         BarcodeFormat.EAN_8,
@@ -273,6 +274,7 @@ export default function ScannerDashboard() {
         BarcodeFormat.UPC_E,
         BarcodeFormat.ITF,
         BarcodeFormat.CODABAR,
+        BarcodeFormat.QR_CODE,
         BarcodeFormat.DATA_MATRIX,
         BarcodeFormat.PDF_417,
         BarcodeFormat.AZTEC
@@ -282,7 +284,8 @@ export default function ScannerDashboard() {
       codeReader.hints = hints;
       
       // Slower scanning interval for better detection of difficult barcodes
-      (codeReader as any).timeBetweenDecodingAttempts = 200;
+      // More time per frame = better analysis
+      (codeReader as any).timeBetweenDecodingAttempts = 300;
 
       // Use continuous scanning optimized for fast multiple scans
       let lastScannedNumber = '';
