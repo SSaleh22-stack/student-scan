@@ -589,7 +589,11 @@ export default function ScannerDashboard() {
               autoPlay
               playsInline
               onClick={handleVideoClick}
-              style={{ cursor: 'pointer' }}
+              style={{ 
+                cursor: 'pointer',
+                // Enhance contrast and brightness for better barcode detection
+                filter: 'contrast(1.2) brightness(1.1) saturate(1.1)'
+              }}
             />
             {/* Scanning line overlay */}
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
