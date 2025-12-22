@@ -50,8 +50,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         is_active: boolean;
       }>('SELECT * FROM users WHERE username = $1', [username]);
 
-      console.log('User found:', !!user);
-
       if (!user || !(await verifyPassword(password, user.password_hash))) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
