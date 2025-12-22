@@ -301,11 +301,11 @@ export default function ScannerDashboard() {
       let lastScannedNumber = '';
       let scanCooldown = false;
       
-      // Use decodeFromVideoElement for better quality and control
-      // This uses the already initialized video stream directly
-      await codeReader.decodeFromVideoElement(
+      // Use decodeFromVideoDevice with the selected device ID for better detection
+      await codeReader.decodeFromVideoDevice(
+        selectedDeviceId,
         videoRef.current,
-        async (result, err) => {
+        async (result: any, err: any) => {
           if (result) {
             const studentNumber = result.getText();
             
