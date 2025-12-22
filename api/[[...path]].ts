@@ -134,7 +134,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Admin routes - require ADMIN role
-  if (path[0] === 'admin') {
+  if (pathArray[0] === 'admin') {
     const adminUser = await requireRole(req, res, 'ADMIN');
     if (!adminUser) return;
 
@@ -195,9 +195,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // PATCH /api/admin/users/:id
-    if (path[1] === 'users' && path[2] && req.method === 'PATCH') {
+    if (pathArray[1] === 'users' && pathArray[2] && req.method === 'PATCH') {
       try {
-        const userId = path[2];
+        const userId = pathArray[2];
         const body = req.body;
         const data = z.object({
           is_active: z.boolean().optional(),
@@ -318,9 +318,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // PATCH /api/admin/sessions/:id
-    if (path[1] === 'sessions' && path[2] && !path[3] && req.method === 'PATCH') {
+    if (pathArray[1] === 'sessions' && pathArray[2] && !pathArray[3] && req.method === 'PATCH') {
       try {
-        const sessionId = path[2];
+        const sessionId = pathArray[2];
         const body = req.body;
         const { is_open } = z.object({ is_open: z.boolean().optional() }).parse(body);
 
@@ -354,9 +354,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // POST /api/admin/sessions/:id/assign
-    if (path[1] === 'sessions' && path[2] && path[3] === 'assign' && req.method === 'POST') {
+    if (pathArray[1] === 'sessions' && pathArray[2] && pathArray[3] === 'assign' && req.method === 'POST') {
       try {
-        const sessionId = path[2];
+        const sessionId = pathArray[2];
         const body = req.body;
         const { scanner_user_id } = z.object({ scanner_user_id: z.string() }).parse(body);
 
@@ -395,9 +395,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // DELETE /api/admin/sessions/:id/assign
-    if (path[1] === 'sessions' && path[2] && path[3] === 'assign' && req.method === 'DELETE') {
+    if (pathArray[1] === 'sessions' && pathArray[2] && pathArray[3] === 'assign' && req.method === 'DELETE') {
       try {
-        const sessionId = path[2];
+        const sessionId = pathArray[2];
         const body = req.body;
         const { scanner_user_id } = z.object({ scanner_user_id: z.string() }).parse(body);
 
@@ -421,9 +421,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // GET /api/admin/sessions/:id/assignments
-    if (path[1] === 'sessions' && path[2] && path[3] === 'assignments' && req.method === 'GET') {
+    if (pathArray[1] === 'sessions' && pathArray[2] && pathArray[3] === 'assignments' && req.method === 'GET') {
       try {
-        const sessionId = path[2];
+        const sessionId = pathArray[2];
 
         const assignments = await query<{
           scanner_user_id: string;
@@ -448,9 +448,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // GET /api/admin/sessions/:id/scans
-    if (path[1] === 'sessions' && path[2] && path[3] === 'scans' && req.method === 'GET') {
+    if (pathArray[1] === 'sessions' && pathArray[2] && pathArray[3] === 'scans' && req.method === 'GET') {
       try {
-        const sessionId = path[2];
+        const sessionId = pathArray[2];
 
         const scans = await query<{
           id: string;
@@ -477,9 +477,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // GET /api/admin/sessions/:id/export.csv
-    if (path[1] === 'sessions' && path[2] && path[3] === 'export.csv' && req.method === 'GET') {
+    if (pathArray[1] === 'sessions' && pathArray[2] && pathArray[3] === 'export.csv' && req.method === 'GET') {
       try {
-        const sessionId = path[2];
+        const sessionId = pathArray[2];
 
         const scans = await query<{
           scanned_student_number: string;
@@ -516,7 +516,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Scanner routes - require SCANNER role
-  if (path[0] === 'scanner') {
+  if (pathArray[0] === 'scanner') {
     const scannerUser = await requireRole(req, res, 'SCANNER');
     if (!scannerUser) return;
 
@@ -553,9 +553,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // POST /api/scanner/sessions/:id/scan
-    if (path[1] === 'sessions' && path[2] && path[3] === 'scan' && req.method === 'POST') {
+    if (pathArray[1] === 'sessions' && pathArray[2] && pathArray[3] === 'scan' && req.method === 'POST') {
       try {
-        const sessionId = path[2];
+        const sessionId = pathArray[2];
         const body = req.body;
         const { scanned_student_number } = z.object({
           scanned_student_number: z.string().min(1),
@@ -614,9 +614,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // GET /api/scanner/sessions/:id/scans
-    if (path[1] === 'sessions' && path[2] && path[3] === 'scans' && req.method === 'GET') {
+    if (pathArray[1] === 'sessions' && pathArray[2] && pathArray[3] === 'scans' && req.method === 'GET') {
       try {
-        const sessionId = path[2];
+        const sessionId = pathArray[2];
 
         const assignment = await queryOne<{ id: string }>(
           `SELECT s.id 
