@@ -258,9 +258,11 @@ export default function ScannerDashboard() {
         throw new Error('Could not determine camera device. Please try again.');
       }
 
-      // Configure for optimal barcode scanning with better quality and response
+      // Configure for maximum barcode detection with enhanced settings
       const hints = new Map();
       hints.set(DecodeHintType.TRY_HARDER, true); // Enable for better detection quality
+      hints.set(DecodeHintType.ASSUME_GS1, false);
+      hints.set(DecodeHintType.CHARACTER_SET, 'UTF-8');
       hints.set(DecodeHintType.POSSIBLE_FORMATS, [
         BarcodeFormat.QR_CODE,
         BarcodeFormat.CODE_128,
@@ -276,11 +278,11 @@ export default function ScannerDashboard() {
         BarcodeFormat.AZTEC
       ]);
       
-      // Set hints for better detection
+      // Set hints for maximum detection capability
       codeReader.hints = hints;
       
-      // Balanced scanning - scan every 100ms for good quality and responsive detection
-      (codeReader as any).timeBetweenDecodingAttempts = 100;
+      // Slower scanning interval for better detection of difficult barcodes
+      (codeReader as any).timeBetweenDecodingAttempts = 200;
 
       // Use continuous scanning optimized for fast multiple scans
       let lastScannedNumber = '';
