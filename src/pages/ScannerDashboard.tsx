@@ -198,9 +198,13 @@ export default function ScannerDashboard() {
         BarcodeFormat.AZTEC
       ]);
       
+      // Set hints for more sensitive scanning
       codeReader.hints = hints;
+      
+      // Reduce time between decoding attempts for faster detection (default is 300ms, we use 50ms)
+      (codeReader as any).timeBetweenDecodingAttempts = 50;
 
-      // Use continuous scanning with faster intervals (scan every 50ms for maximum sensitivity)
+      // Use continuous scanning with optimized settings
       await codeReader.decodeFromVideoDevice(
         selectedDeviceId,
         videoRef.current,
@@ -224,10 +228,6 @@ export default function ScannerDashboard() {
             // NotFoundException is normal when no barcode is visible
             console.error('Scan error:', err);
           }
-        },
-        {
-          // Scan every 50ms for maximum sensitivity and faster detection
-          timeBetweenDecodingAttempts: 50
         }
       );
     } catch (err) {
