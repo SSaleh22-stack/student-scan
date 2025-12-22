@@ -456,17 +456,17 @@ export default function ScannerDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <h1 className="text-xl font-bold">Scanner Dashboard</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{selectedSession.title}</span>
-              <span className="text-sm font-medium text-blue-600">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+          <div className="flex justify-between h-14 sm:h-16 items-center">
+            <h1 className="text-lg sm:text-xl font-bold">Scanner Dashboard</h1>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <span className="text-xs sm:text-sm text-gray-600 hidden sm:inline">{selectedSession.title}</span>
+              <span className="text-xs sm:text-sm font-medium text-blue-600">
                 Scans: {scanCount}
               </span>
               <button
                 onClick={logout}
-                className="text-sm text-red-600 hover:text-red-700"
+                className="text-xs sm:text-sm text-red-600 hover:text-red-700 px-2 sm:px-0 py-1 sm:py-0"
               >
                 Logout
               </button>
@@ -475,7 +475,7 @@ export default function ScannerDashboard() {
         </div>
       </nav>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
         {error && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded text-sm">
             {error}
@@ -525,38 +525,29 @@ export default function ScannerDashboard() {
             </div>
           </div>
           <div className="flex gap-4 justify-center">
-            {!scanning ? (
-              <button
-                onClick={startScanning}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium"
-              >
-                Start Camera Scan
-              </button>
-            ) : (
-              <button
-                onClick={stopScanning}
-                className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 font-medium"
-              >
-                Stop Scanning
-              </button>
-            )}
+            <button
+              onClick={startScanning}
+              className="bg-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-blue-700 font-medium text-sm sm:text-base w-full sm:w-auto"
+            >
+              Start Camera Scan
+            </button>
           </div>
         </div>
 
         {/* Scan Result Popup */}
         {showScanResult && lastScanned && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-xl p-8 max-w-md mx-4 animate-bounce">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl p-4 sm:p-8 max-w-md w-full mx-4 animate-bounce">
               <div className="text-center">
-                <div className="mb-4">
-                  <svg className="w-16 h-16 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="mb-3 sm:mb-4">
+                  <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">Scan Successful!</h3>
-                <p className="text-lg text-gray-600 mb-1">Student Number:</p>
-                <p className="text-3xl font-bold text-blue-600 mb-4">{lastScanned}</p>
-                <p className="text-sm text-gray-500">Continue scanning...</p>
+                <h3 className="text-lg sm:text-2xl font-bold text-gray-800 mb-2">Scan Successful!</h3>
+                <p className="text-sm sm:text-lg text-gray-600 mb-1">Student Number:</p>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-600 mb-3 sm:mb-4 break-all">{lastScanned}</p>
+                <p className="text-xs sm:text-sm text-gray-500">Continue scanning...</p>
               </div>
             </div>
           </div>
