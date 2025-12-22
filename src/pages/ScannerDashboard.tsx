@@ -104,21 +104,54 @@ export default function ScannerDashboard() {
       const codeReader = new BrowserMultiFormatReader();
       codeReaderRef.current = codeReader;
 
-      // Request camera permission first
+      // Request camera permission first with specific constraints
+      let stream: MediaStream | null = null;
       try {
-        await navigator.mediaDevices.getUserMedia({ video: true });
-      } catch (permissionError) {
-        if (permissionError instanceof Error) {
-          if (permissionError.name === 'NotAllowedError' || permissionError.name === 'PermissionDeniedError') {
-            throw new Error('Camera permission denied. Please allow camera access in your browser settings.');
-          } else if (permissionError.name === 'NotFoundError' || permissionError.name === 'DevicesNotFoundError') {
-            throw new Error('No camera found. Please connect a camera and try again.');
-          } else if (permissionError.name === 'NotReadableError' || permissionError.name === 'TrackStartError') {
-            throw new Error('Camera is already in use by another application.');
+        // Try to get rear camera first
+        const constraints: MediaStreamConstraints = {
+          video: {
+            facingMode: { ideal: 'environment' }, // Prefer rear camera
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
           }
+        };
+        
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        // If we got a stream, attach it to the video element
+        if (videoRef.current && stream) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
         }
-        throw new Error('Failed to access camera. Please check your camera permissions.');
+      } catch (permissionError) {
+        // If rear camera fails, try any camera
+        try {
+          const fallbackConstraints: MediaStreamConstraints = {
+            video: true
+          };
+          stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+          if (videoRef.current && stream) {
+            videoRef.current.srcObject = stream;
+            await videoRef.current.play();
+          }
+        } catch (fallbackError) {
+          if (permissionError instanceof Error) {
+            if (permissionError.name === 'NotAllowedError' || permissionError.name === 'PermissionDeniedError') {
+              throw new Error('Camera permission denied. Please allow camera access in your browser settings.');
+            } else if (permissionError.name === 'NotFoundError' || permissionError.name === 'DevicesNotFoundError') {
+              throw new Error('No camera found. Please connect a camera and try again.');
+            } else if (permissionError.name === 'NotReadableError' || permissionError.name === 'TrackStartError') {
+              throw new Error('Camera is already in use by another application.');
+            } else if (permissionError.name === 'OverconstrainedError') {
+              throw new Error('Camera constraints not supported. Trying with default settings...');
+            }
+          }
+          throw new Error('Failed to access camera. Please check your camera permissions and try again.');
+        }
       }
+
+      // Wait a bit for video to initialize
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const videoInputDevices = await codeReader.listVideoInputDevices();
       
@@ -140,6 +173,11 @@ export default function ScannerDashboard() {
 
       if (!selectedDeviceId) {
         throw new Error('No camera found. Please connect a camera and try again.');
+      }
+
+      // Stop the initial stream before starting ZXing
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
       }
 
       await codeReader.decodeFromVideoDevice(
@@ -183,6 +221,12 @@ export default function ScannerDashboard() {
     if (codeReaderRef.current) {
       codeReaderRef.current.reset();
       codeReaderRef.current = null;
+    }
+    // Stop video stream
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
     }
     setScanning(false);
   };
