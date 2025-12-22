@@ -283,13 +283,124 @@ export default function ScannerDashboard() {
       codeReaderRef.current.reset();
       codeReaderRef.current = null;
     }
-    // Stop video stream
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
     setScanning(false);
+  };
+
+  const handleVideoClick = async (e: React.MouseEvent<HTMLVideoElement>) => {
+    // Tap-to-focus functionality
+    if (!videoRef.current || !streamRef.current) return;
+
+    const video = videoRef.current;
+    const videoTrack = streamRef.current.getVideoTracks()[0];
+    
+    if (!videoTrack || !videoTrack.getCapabilities) return;
+
+    try {
+      const capabilities = videoTrack.getCapabilities();
+      
+      // Check if focus is supported
+      if (capabilities.focusMode && capabilities.focusMode.includes('manual')) {
+        // Try to set focus point (if supported)
+        if (videoTrack.applyConstraints) {
+          try {
+            await videoTrack.applyConstraints({
+              advanced: [
+                { focusMode: 'single-shot' } as any
+              ]
+            });
+            
+            // Show focus indicator
+            showFocusIndicator(e.clientX, e.clientY);
+            
+            // Switch back to continuous after a moment
+            setTimeout(async () => {
+              try {
+                await videoTrack.applyConstraints({
+                  advanced: [
+                    { focusMode: 'continuous' } as any
+                  ]
+                });
+              } catch (e) {
+                // Ignore errors
+              }
+            }, 1000);
+          } catch (focusError) {
+            console.log('Focus adjustment not supported:', focusError);
+          }
+        }
+      }
+    } catch (err) {
+      console.log('Focus not available:', err);
+    }
+  };
+
+  const showFocusIndicator = (x: number, y: number) => {
+    // Create a temporary focus indicator
+    const indicator = document.createElement('div');
+    indicator.style.position = 'fixed';
+    indicator.style.left = `${x - 20}px`;
+    indicator.style.top = `${y - 20}px`;
+    indicator.style.width = '40px';
+    indicator.style.height = '40px';
+    indicator.style.border = '2px solid #10b981';
+    indicator.style.borderRadius = '50%';
+    indicator.style.pointerEvents = 'none';
+    indicator.style.zIndex = '1000';
+    indicator.style.animation = 'pulse 0.5s ease-out';
+    document.body.appendChild(indicator);
+
+    setTimeout(() => {
+      indicator.remove();
+    }, 500);
+  };
+
+  const triggerAutofocus = async () => {
+    if (!streamRef.current || !videoRef.current) return;
+
+    const videoTrack = streamRef.current.getVideoTracks()[0];
+    if (!videoTrack) return;
+
+    try {
+      // Try to trigger autofocus
+      if (videoTrack.applyConstraints) {
+        // First try single-shot focus
+        try {
+          await videoTrack.applyConstraints({
+            advanced: [
+              { focusMode: 'single-shot' } as any
+            ]
+          });
+          
+          // Then switch back to continuous
+          setTimeout(async () => {
+            try {
+              await videoTrack.applyConstraints({
+                advanced: [
+                  { focusMode: 'continuous' } as any
+                ]
+              });
+            } catch (e) {
+              // Ignore errors
+            }
+          }, 500);
+          
+          // Show focus indicator in center
+          const rect = videoRef.current.getBoundingClientRect();
+          showFocusIndicator(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        } catch (focusError) {
+          console.log('Focus adjustment not supported:', focusError);
+        }
+      }
+    } catch (err) {
+      console.log('Focus not available:', err);
+    }
   };
 
   const playScanSound = () => {
