@@ -541,12 +541,21 @@ export default function ScannerDashboard() {
                 <h2 className="text-sm sm:text-lg font-bold truncate">{selectedSession?.title}</h2>
                 <p className="text-xs sm:text-sm text-gray-300">Scans: {scanCount}</p>
               </div>
-              <button
-                onClick={stopScanning}
-                className="bg-red-600 text-white px-3 sm:px-6 py-1.5 sm:py-2 rounded-lg hover:bg-red-700 font-medium text-xs sm:text-sm whitespace-nowrap"
-              >
-                Stop
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={triggerAutofocus}
+                  className="bg-blue-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-blue-700 font-medium text-xs sm:text-sm whitespace-nowrap"
+                  title="Focus Camera"
+                >
+                  Focus
+                </button>
+                <button
+                  onClick={stopScanning}
+                  className="bg-red-600 text-white px-3 sm:px-6 py-1.5 sm:py-2 rounded-lg hover:bg-red-700 font-medium text-xs sm:text-sm whitespace-nowrap"
+                >
+                  Stop
+                </button>
+              </div>
             </div>
           </div>
 
