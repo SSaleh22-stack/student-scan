@@ -230,15 +230,25 @@ export default function ScannerDashboard() {
         }
       }
       
-      // Enable continuous autofocus
+      // Enable continuous autofocus and optimize exposure/white balance
       try {
+        const advancedSettings: any = {
+          focusMode: 'continuous'
+        };
+        
+        // Add exposure and white balance if supported
+        if (capabilities.exposureMode && capabilities.exposureMode.includes('continuous')) {
+          advancedSettings.exposureMode = 'continuous';
+        }
+        if (capabilities.whiteBalanceMode && capabilities.whiteBalanceMode.includes('continuous')) {
+          advancedSettings.whiteBalanceMode = 'continuous';
+        }
+        
         await videoTrack.applyConstraints({
-          advanced: [
-            { focusMode: 'continuous' } as any
-          ]
+          advanced: [advancedSettings]
         });
       } catch (focusError) {
-        // Focus not supported, continue without it
+        // Focus/exposure not supported, continue without it
       }
       
       // Attach stream to video element
