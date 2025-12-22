@@ -268,13 +268,13 @@ export default function ScannerDashboard() {
         throw new Error('Could not determine camera device. Please try again.');
       }
 
-      // Configure for maximum barcode detection with enhanced settings
+      // Configure for maximum barcode detection with aggressive settings
       const hints = new Map();
       hints.set(DecodeHintType.TRY_HARDER, true); // Enable for better detection quality
       hints.set(DecodeHintType.ASSUME_GS1, false);
       hints.set(DecodeHintType.CHARACTER_SET, 'UTF-8');
-      // Enable pure barcode mode for better detection of standard barcodes
-      hints.set(DecodeHintType.PURE_BARCODE, false); // false = allow surrounding content
+      // Allow surrounding content for better detection
+      hints.set(DecodeHintType.PURE_BARCODE, false);
       hints.set(DecodeHintType.POSSIBLE_FORMATS, [
         BarcodeFormat.CODE_128,  // Most common, check first
         BarcodeFormat.CODE_39,
@@ -293,16 +293,17 @@ export default function ScannerDashboard() {
       // Set hints for maximum detection capability
       codeReader.hints = hints;
       
-      // Slower scanning interval for better detection of difficult barcodes
-      // More time per frame = better analysis
-      (codeReader as any).timeBetweenDecodingAttempts = 300;
+      // Much slower scanning interval for maximum detection of difficult barcodes
+      // More time per frame = better analysis and multiple attempts
+      (codeReader as any).timeBetweenDecodingAttempts = 500;
 
       // Use continuous scanning optimized for fast multiple scans
       let lastScannedNumber = '';
       let scanCooldown = false;
       
-      await codeReader.decodeFromVideoDevice(
-        selectedDeviceId,
+      // Use decodeFromVideoElement for better quality and control
+      // This uses the already initialized video stream directly
+      await codeReader.decodeFromVideoElement(
         videoRef.current,
         async (result, err) => {
           if (result) {
