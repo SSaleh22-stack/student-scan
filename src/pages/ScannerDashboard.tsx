@@ -107,12 +107,18 @@ export default function ScannerDashboard() {
       // Request camera permission first with specific constraints
       let stream: MediaStream | null = null;
       try {
-        // Try to get rear camera first
+        // Try to get rear camera first with autofocus enabled
         const constraints: MediaStreamConstraints = {
           video: {
             facingMode: { ideal: 'environment' }, // Prefer rear camera
             width: { ideal: 1280 },
-            height: { ideal: 720 }
+            height: { ideal: 720 },
+            // Enable autofocus
+            focusMode: { ideal: 'continuous' }, // Continuous autofocus
+            advanced: [
+              { focusMode: 'continuous' },
+              { focusMode: 'single-shot' }
+            ] as any
           }
         };
         
@@ -124,10 +130,15 @@ export default function ScannerDashboard() {
           await videoRef.current.play();
         }
       } catch (permissionError) {
-        // If rear camera fails, try any camera
+        // If rear camera fails, try any camera with autofocus
         try {
           const fallbackConstraints: MediaStreamConstraints = {
-            video: true
+            video: {
+              focusMode: { ideal: 'continuous' } as any,
+              advanced: [
+                { focusMode: 'continuous' } as any
+              ] as any
+            }
           };
           stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
           if (videoRef.current && stream) {
