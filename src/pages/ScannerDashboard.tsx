@@ -220,9 +220,9 @@ export default function ScannerDashboard() {
         stream.getTracks().forEach(track => track.stop());
       }
 
-      // Configure for faster, more sensitive scanning
+      // Configure for ultra-fast scanning
       const hints = new Map();
-      hints.set(DecodeHintType.TRY_HARDER, true);
+      hints.set(DecodeHintType.TRY_HARDER, false); // Disable for faster scanning
       hints.set(DecodeHintType.POSSIBLE_FORMATS, [
         BarcodeFormat.QR_CODE,
         BarcodeFormat.CODE_128,
@@ -238,11 +238,11 @@ export default function ScannerDashboard() {
         BarcodeFormat.AZTEC
       ]);
       
-      // Set hints for more sensitive scanning
+      // Set hints for faster scanning
       codeReader.hints = hints;
       
-      // Reduce time between decoding attempts for faster detection (default is 300ms, we use 50ms)
-      (codeReader as any).timeBetweenDecodingAttempts = 50;
+      // Ultra-fast scanning - scan every 30ms for maximum speed
+      (codeReader as any).timeBetweenDecodingAttempts = 30;
 
       // Use continuous scanning with optimized settings
       await codeReader.decodeFromVideoDevice(
@@ -362,48 +362,6 @@ export default function ScannerDashboard() {
     setTimeout(() => {
       indicator.remove();
     }, 500);
-  };
-
-  const triggerAutofocus = async () => {
-    if (!streamRef.current || !videoRef.current) return;
-
-    const videoTrack = streamRef.current.getVideoTracks()[0];
-    if (!videoTrack) return;
-
-    try {
-      // Try to trigger autofocus
-      if (videoTrack.applyConstraints) {
-        // First try single-shot focus
-        try {
-          await videoTrack.applyConstraints({
-            advanced: [
-              { focusMode: 'single-shot' } as any
-            ]
-          });
-          
-          // Then switch back to continuous
-          setTimeout(async () => {
-            try {
-              await videoTrack.applyConstraints({
-                advanced: [
-                  { focusMode: 'continuous' } as any
-                ]
-              });
-            } catch (e) {
-              // Ignore errors
-            }
-          }, 500);
-          
-          // Show focus indicator in center
-          const rect = videoRef.current.getBoundingClientRect();
-          showFocusIndicator(rect.left + rect.width / 2, rect.top + rect.height / 2);
-        } catch (focusError) {
-          console.log('Focus adjustment not supported:', focusError);
-        }
-      }
-    } catch (err) {
-      console.log('Focus not available:', err);
-    }
   };
 
   const playScanSound = () => {
