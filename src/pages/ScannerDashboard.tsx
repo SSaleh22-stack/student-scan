@@ -107,22 +107,34 @@ export default function ScannerDashboard() {
       // Request camera permission first with specific constraints
       let stream: MediaStream | null = null;
       try {
-        // Try to get rear camera first with autofocus enabled
+        // Try to get rear camera first
         const constraints: MediaStreamConstraints = {
           video: {
             facingMode: { ideal: 'environment' }, // Prefer rear camera
             width: { ideal: 1280 },
-            height: { ideal: 720 },
-            // Enable autofocus
-            focusMode: { ideal: 'continuous' }, // Continuous autofocus
-            advanced: [
-              { focusMode: 'continuous' },
-              { focusMode: 'single-shot' }
-            ] as any
+            height: { ideal: 720 }
           }
         };
         
         stream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        // Enable autofocus after getting the stream
+        if (stream) {
+          const videoTrack = stream.getVideoTracks()[0];
+          if (videoTrack && videoTrack.applyConstraints) {
+            try {
+              // Try to enable continuous autofocus
+              await videoTrack.applyConstraints({
+                advanced: [
+                  { focusMode: 'continuous' } as any
+                ]
+              });
+            } catch (focusError) {
+              // Focus not supported, continue without it
+              console.log('Autofocus not supported on this device');
+            }
+          }
+        }
         
         // If we got a stream, attach it to the video element
         if (videoRef.current && stream) {
@@ -130,17 +142,30 @@ export default function ScannerDashboard() {
           await videoRef.current.play();
         }
       } catch (permissionError) {
-        // If rear camera fails, try any camera with autofocus
+        // If rear camera fails, try any camera
         try {
           const fallbackConstraints: MediaStreamConstraints = {
-            video: {
-              focusMode: { ideal: 'continuous' } as any,
-              advanced: [
-                { focusMode: 'continuous' } as any
-              ] as any
-            }
+            video: true
           };
           stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+          
+          // Enable autofocus after getting the stream
+          if (stream) {
+            const videoTrack = stream.getVideoTracks()[0];
+            if (videoTrack && videoTrack.applyConstraints) {
+              try {
+                await videoTrack.applyConstraints({
+                  advanced: [
+                    { focusMode: 'continuous' } as any
+                  ]
+                });
+              } catch (focusError) {
+                // Focus not supported, continue without it
+                console.log('Autofocus not supported on this device');
+              }
+            }
+          }
+          
           if (videoRef.current && stream) {
             videoRef.current.srcObject = stream;
             await videoRef.current.play();
@@ -420,6 +445,8 @@ export default function ScannerDashboard() {
               className="w-full h-full object-cover"
               autoPlay
               playsInline
+              onClick={handleVideoClick}
+              style={{ cursor: 'pointer' }}
             />
             {/* Scanning line overlay */}
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
