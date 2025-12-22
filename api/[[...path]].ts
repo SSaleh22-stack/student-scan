@@ -19,8 +19,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  const path = (req.query.path as string[]) || [];
-  const route = path.join('/');
+  const pathArray = (req.query.path as string[]) || [];
+  const route = pathArray.join('/');
 
   // Auth routes
   if (route === 'auth/login' && req.method === 'POST') {
