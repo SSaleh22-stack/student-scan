@@ -299,7 +299,7 @@ export default function ScannerDashboard() {
       
       // Shared function to handle scan result
       const handleScanResult = (studentNumber: string) => {
-        // Prevent duplicate scans within 1 second
+        // Prevent duplicate scans within 500ms
         if (studentNumber === lastScannedNumber && scanCooldown) {
           return;
         }
@@ -309,17 +309,17 @@ export default function ScannerDashboard() {
         setTimeout(() => {
           scanCooldown = false;
           lastScannedNumber = '';
-        }, 1000);
+        }, 500);
         
         // Play sound immediately
         playScanSound();
-        // Show popup with result
+        // Show popup with result immediately (no delay)
         setLastScanned(studentNumber);
         setShowScanResult(true);
-        // Auto-hide popup after 1.5 seconds
+        // Auto-hide popup after 1 second (reduced from 1.5s)
         setTimeout(() => {
           setShowScanResult(false);
-        }, 1500);
+        }, 1000);
         // Process the scan (non-blocking)
         handleScan(studentNumber).catch(() => {
           // Silent error handling - don't block scanning
@@ -330,10 +330,27 @@ export default function ScannerDashboard() {
       const canvas = document.createElement('canvas');
       const canvasContext = canvas.getContext('2d', { willReadFrequently: true });
       const invertedCodeReader = new BrowserMultiFormatReader();
-      invertedCodeReader.hints = hints;
+      // Use more aggressive hints for inverted barcodes
+      const invertedHints = new Map();
+      invertedHints.set(DecodeHintType.TRY_HARDER, true); // Enable for better detection
+      invertedHints.set(DecodeHintType.ASSUME_GS1, false);
+      invertedHints.set(DecodeHintType.CHARACTER_SET, 'UTF-8');
+      invertedHints.set(DecodeHintType.PURE_BARCODE, false);
+      invertedHints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.ITF,
+        BarcodeFormat.CODABAR
+      ]);
+      invertedCodeReader.hints = invertedHints;
       
       // Use requestAnimationFrame for smoother, faster checking
       let invertedCheckFrame: number | null = null;
+      let lastInvertedCheck = 0;
       
       const checkInvertedBarcode = async () => {
         if (!isScanningActive || !videoRef.current || !canvasContext) {
@@ -343,6 +360,14 @@ export default function ScannerDashboard() {
           return;
         }
         
+        const now = Date.now();
+        // Check every 100ms for better performance balance
+        if (now - lastInvertedCheck < 100) {
+          invertedCheckFrame = requestAnimationFrame(checkInvertedBarcode);
+          return;
+        }
+        lastInvertedCheck = now;
+        
         try {
           const video = videoRef.current;
           if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0 && video.videoHeight > 0) {
@@ -350,86 +375,81 @@ export default function ScannerDashboard() {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             
-            // Draw video frame to canvas
+            // Draw video frame to canvas with enhanced contrast
             canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
             
             // Get image data
             const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
             
-            // Invert colors for inverted barcode detection (white on dark -> black on white)
-            // Process in chunks for better performance
-            const chunkSize = 10000; // Process 10000 pixels at a time
-            for (let i = 0; i < data.length; i += chunkSize) {
-              const end = Math.min(i + chunkSize, data.length);
-              for (let j = i; j < end; j += 4) {
-                data[j] = 255 - data[j];     // R
-                data[j + 1] = 255 - data[j + 1]; // G
-                data[j + 2] = 255 - data[j + 2]; // B
-                // Alpha stays the same
-              }
+            // Invert colors and enhance contrast for inverted barcode detection
+            // This converts white on dark -> black on white with better contrast
+            for (let i = 0; i < data.length; i += 4) {
+              // Invert colors
+              const r = 255 - data[i];
+              const g = 255 - data[i + 1];
+              const b = 255 - data[i + 2];
+              
+              // Enhance contrast for better detection
+              const contrast = 1.5;
+              const factor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255));
+              data[i] = Math.max(0, Math.min(255, factor * (r - 128) + 128));     // R
+              data[i + 1] = Math.max(0, Math.min(255, factor * (g - 128) + 128)); // G
+              data[i + 2] = Math.max(0, Math.min(255, factor * (b - 128) + 128)); // B
+              // Alpha stays the same
             }
             
             // Put inverted data back to canvas
             canvasContext.putImageData(imageData, 0, 0);
             
-            // Try to decode directly from canvas using decodeFromImageElement
-            // Create image synchronously for faster processing
-            const image = new Image();
-            const dataUrl = canvas.toDataURL('image/png');
-            image.src = dataUrl;
-            
-            // Try decoding immediately if image is already loaded, otherwise wait
-            if (image.complete) {
-              try {
-                const result = await invertedCodeReader.decodeFromImageElement(image);
-                if (result) {
-                  const studentNumber = result.getText();
-                  handleScanResult(studentNumber);
+            // Try to decode directly from canvas
+            try {
+              // Use decodeFromImageElement with canvas directly
+              const image = new Image();
+              image.src = canvas.toDataURL('image/png', 1.0); // High quality
+              
+              // Decode with timeout
+              const decodePromise = new Promise<any>((resolve) => {
+                if (image.complete) {
+                  invertedCodeReader.decodeFromImageElement(image)
+                    .then(resolve)
+                    .catch(() => resolve(null));
+                } else {
+                  const timeout = setTimeout(() => resolve(null), 100);
+                  image.onload = () => {
+                    clearTimeout(timeout);
+                    invertedCodeReader.decodeFromImageElement(image)
+                      .then(resolve)
+                      .catch(() => resolve(null));
+                  };
+                  image.onerror = () => {
+                    clearTimeout(timeout);
+                    resolve(null);
+                  };
                 }
-              } catch (decodeError) {
-                // Inverted scan failed, continue
-              }
-            } else {
-              // Wait for image load with timeout
-              await new Promise<void>((resolve) => {
-                const timeout = setTimeout(() => resolve(), 50); // 50ms timeout
-                image.onload = () => {
-                  clearTimeout(timeout);
-                  resolve();
-                };
-                image.onerror = () => {
-                  clearTimeout(timeout);
-                  resolve();
-                };
               });
               
-              try {
-                const result = await invertedCodeReader.decodeFromImageElement(image);
-                if (result) {
-                  const studentNumber = result.getText();
-                  handleScanResult(studentNumber);
-                }
-              } catch (decodeError) {
-                // Inverted scan failed, continue
+              const result = await decodePromise;
+              if (result) {
+                const studentNumber = result.getText();
+                handleScanResult(studentNumber);
               }
+            } catch (decodeError) {
+              // Inverted scan failed, continue
             }
           }
         } catch (error) {
           // Continue scanning on error
         }
         
-        // Continue checking inverted barcodes using requestAnimationFrame for smooth 60fps checking
+        // Continue checking inverted barcodes
         if (isScanningActive) {
-          invertedCheckFrame = requestAnimationFrame(() => {
-            // Throttle to every 3 frames (~50ms at 60fps) for performance
-            setTimeout(checkInvertedBarcode, 50);
-          });
+          invertedCheckFrame = requestAnimationFrame(checkInvertedBarcode);
         }
       };
       
       // Start inverted barcode checker immediately
-      setTimeout(checkInvertedBarcode, 200);
+      setTimeout(checkInvertedBarcode, 100);
       
       // Also try scanning with inverted video using CSS filter
       // Create a hidden video element with inverted colors for scanning
@@ -451,10 +471,10 @@ export default function ScannerDashboard() {
         }
       });
       
-      // Create second code reader for inverted video
+      // Create second code reader for inverted video with aggressive settings
       const invertedVideoCodeReader = new BrowserMultiFormatReader();
-      invertedVideoCodeReader.hints = hints;
-      (invertedVideoCodeReader as any).timeBetweenDecodingAttempts = 150;
+      invertedVideoCodeReader.hints = invertedHints;
+      (invertedVideoCodeReader as any).timeBetweenDecodingAttempts = 100; // Faster scanning
       
       // Start scanning inverted video
       invertedVideoCodeReader.decodeFromVideoDevice(
