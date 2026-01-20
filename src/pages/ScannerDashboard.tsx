@@ -268,22 +268,30 @@ export default function ScannerDashboard() {
         throw new Error('Could not determine camera device. Please try again.');
       }
 
-      // Configure for fast barcode detection - optimized for CODE128
+      // Configure for fast barcode detection - support ALL barcode types
       const hints = new Map();
       hints.set(DecodeHintType.TRY_HARDER, false); // Disable for faster scanning
       hints.set(DecodeHintType.ASSUME_GS1, false);
       hints.set(DecodeHintType.CHARACTER_SET, 'UTF-8');
       hints.set(DecodeHintType.PURE_BARCODE, false); // Allow surrounding content
-      // Prioritize CODE128 since that's what we generate
+      // Support ALL barcode formats
       hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-        BarcodeFormat.CODE_128,  // Primary format - check first
-        BarcodeFormat.CODE_39,   // Secondary
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.CODE_93,
         BarcodeFormat.EAN_13,
         BarcodeFormat.EAN_8,
         BarcodeFormat.UPC_A,
         BarcodeFormat.UPC_E,
         BarcodeFormat.ITF,
-        BarcodeFormat.CODABAR
+        BarcodeFormat.CODABAR,
+        BarcodeFormat.QR_CODE,
+        BarcodeFormat.DATA_MATRIX,
+        BarcodeFormat.PDF_417,
+        BarcodeFormat.AZTEC,
+        BarcodeFormat.MAXICODE,
+        BarcodeFormat.RSS_14,
+        BarcodeFormat.RSS_EXPANDED
       ]);
       
       // Set hints for fast detection
@@ -313,13 +321,13 @@ export default function ScannerDashboard() {
         
         // Play sound immediately
         playScanSound();
-        // Show popup with result immediately (no delay)
+        // Show popup with result IMMEDIATELY (no delay, synchronous)
         setLastScanned(studentNumber);
         setShowScanResult(true);
-        // Auto-hide popup after 1 second (reduced from 1.5s)
+        // Auto-hide popup after 1.5 seconds
         setTimeout(() => {
           setShowScanResult(false);
-        }, 1000);
+        }, 1500);
         // Process the scan (non-blocking)
         handleScan(studentNumber).catch(() => {
           // Silent error handling - don't block scanning
@@ -330,21 +338,30 @@ export default function ScannerDashboard() {
       const canvas = document.createElement('canvas');
       const canvasContext = canvas.getContext('2d', { willReadFrequently: true });
       const invertedCodeReader = new BrowserMultiFormatReader();
-      // Use more aggressive hints for inverted barcodes
+      // Use more aggressive hints for inverted barcodes - support ALL formats
       const invertedHints = new Map();
       invertedHints.set(DecodeHintType.TRY_HARDER, true); // Enable for better detection
       invertedHints.set(DecodeHintType.ASSUME_GS1, false);
       invertedHints.set(DecodeHintType.CHARACTER_SET, 'UTF-8');
       invertedHints.set(DecodeHintType.PURE_BARCODE, false);
+      // Support ALL barcode formats for inverted detection
       invertedHints.set(DecodeHintType.POSSIBLE_FORMATS, [
         BarcodeFormat.CODE_128,
         BarcodeFormat.CODE_39,
+        BarcodeFormat.CODE_93,
         BarcodeFormat.EAN_13,
         BarcodeFormat.EAN_8,
         BarcodeFormat.UPC_A,
         BarcodeFormat.UPC_E,
         BarcodeFormat.ITF,
-        BarcodeFormat.CODABAR
+        BarcodeFormat.CODABAR,
+        BarcodeFormat.QR_CODE,
+        BarcodeFormat.DATA_MATRIX,
+        BarcodeFormat.PDF_417,
+        BarcodeFormat.AZTEC,
+        BarcodeFormat.MAXICODE,
+        BarcodeFormat.RSS_14,
+        BarcodeFormat.RSS_EXPANDED
       ]);
       invertedCodeReader.hints = invertedHints;
       
@@ -574,6 +591,9 @@ export default function ScannerDashboard() {
     // Tap-to-focus functionality
     if (!videoRef.current || !streamRef.current) return;
 
+    // Show focus indicator IMMEDIATELY (before async operations)
+    showFocusIndicator(e.clientX, e.clientY);
+
     const videoTrack = streamRef.current.getVideoTracks()[0];
     
     if (!videoTrack || !videoTrack.getCapabilities) return;
@@ -591,9 +611,6 @@ export default function ScannerDashboard() {
                 { focusMode: 'single-shot' } as any
               ]
             });
-            
-            // Show focus indicator
-            showFocusIndicator(e.clientX, e.clientY);
             
             // Switch back to continuous after a moment
             setTimeout(async () => {
@@ -618,23 +635,34 @@ export default function ScannerDashboard() {
   };
 
   const showFocusIndicator = (x: number, y: number) => {
-    // Create a temporary focus indicator
+    // Create a temporary focus indicator - show IMMEDIATELY
     const indicator = document.createElement('div');
     indicator.style.position = 'fixed';
-    indicator.style.left = `${x - 20}px`;
-    indicator.style.top = `${y - 20}px`;
-    indicator.style.width = '40px';
-    indicator.style.height = '40px';
-    indicator.style.border = '2px solid #10b981';
+    indicator.style.left = `${x - 30}px`;
+    indicator.style.top = `${y - 30}px`;
+    indicator.style.width = '60px';
+    indicator.style.height = '60px';
+    indicator.style.border = '3px solid #10b981';
     indicator.style.borderRadius = '50%';
     indicator.style.pointerEvents = 'none';
-    indicator.style.zIndex = '1000';
-    indicator.style.animation = 'pulse 0.5s ease-out';
+    indicator.style.zIndex = '10000';
+    indicator.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.8)';
+    indicator.style.transition = 'all 0.3s ease-out';
     document.body.appendChild(indicator);
 
+    // Animate immediately
+    requestAnimationFrame(() => {
+      indicator.style.transform = 'scale(1.2)';
+      indicator.style.opacity = '0.8';
+    });
+
     setTimeout(() => {
-      indicator.remove();
-    }, 500);
+      indicator.style.transform = 'scale(1.5)';
+      indicator.style.opacity = '0';
+      setTimeout(() => {
+        indicator.remove();
+      }, 300);
+    }, 600);
   };
 
   const playScanSound = () => {
