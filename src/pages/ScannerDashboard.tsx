@@ -268,13 +268,13 @@ export default function ScannerDashboard() {
         throw new Error('Could not determine camera device. Please try again.');
       }
 
-      // Configure for fast barcode detection - support ALL barcode types
+      // Configure for EASIER barcode detection - support ALL barcode types with aggressive settings
       const hints = new Map();
-      hints.set(DecodeHintType.TRY_HARDER, false); // Disable for faster scanning
+      hints.set(DecodeHintType.TRY_HARDER, true); // Enable for easier detection of difficult barcodes
       hints.set(DecodeHintType.ASSUME_GS1, false);
       hints.set(DecodeHintType.CHARACTER_SET, 'UTF-8');
-      hints.set(DecodeHintType.PURE_BARCODE, false); // Allow surrounding content
-      // Support ALL barcode formats
+      hints.set(DecodeHintType.PURE_BARCODE, false); // Allow surrounding content for easier detection
+      // Support ALL barcode formats - comprehensive list
       hints.set(DecodeHintType.POSSIBLE_FORMATS, [
         BarcodeFormat.CODE_128,
         BarcodeFormat.CODE_39,
@@ -294,11 +294,11 @@ export default function ScannerDashboard() {
         BarcodeFormat.RSS_EXPANDED
       ]);
       
-      // Set hints for fast detection
+      // Set hints for easier detection
       codeReader.hints = hints;
       
-      // Fast scanning interval - 100ms for reliable fast detection
-      (codeReader as any).timeBetweenDecodingAttempts = 100;
+      // Faster scanning interval - 50ms for easier, more frequent detection
+      (codeReader as any).timeBetweenDecodingAttempts = 50;
 
       // Use continuous scanning optimized for fast multiple scans
       let lastScannedNumber = '';
@@ -378,8 +378,8 @@ export default function ScannerDashboard() {
         }
         
         const now = Date.now();
-        // Check every 100ms for better performance balance
-        if (now - lastInvertedCheck < 100) {
+        // Check every 50ms for easier, more frequent detection
+        if (now - lastInvertedCheck < 50) {
           invertedCheckFrame = requestAnimationFrame(checkInvertedBarcode);
           return;
         }
@@ -474,8 +474,8 @@ export default function ScannerDashboard() {
         }
       };
       
-      // Start inverted barcode checker immediately
-      setTimeout(checkInvertedBarcode, 100);
+      // Start inverted barcode checker immediately for easier detection
+      setTimeout(checkInvertedBarcode, 50);
       
       // Also try scanning with inverted video using CSS filter
       // Create a hidden video element with inverted colors for scanning
@@ -500,7 +500,7 @@ export default function ScannerDashboard() {
       // Create second code reader for inverted video with aggressive settings
       const invertedVideoCodeReader = new BrowserMultiFormatReader();
       invertedVideoCodeReader.hints = invertedHints;
-      (invertedVideoCodeReader as any).timeBetweenDecodingAttempts = 100; // Faster scanning
+      (invertedVideoCodeReader as any).timeBetweenDecodingAttempts = 50; // Faster scanning for easier detection
       
       // Start scanning inverted video
       invertedVideoCodeReader.decodeFromVideoDevice(
