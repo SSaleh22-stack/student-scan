@@ -382,20 +382,29 @@ export default function ScannerDashboard() {
             const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
             
-            // Invert colors and enhance contrast for inverted barcode detection
-            // This converts white on dark -> black on white with better contrast
+            // Convert white barcodes on colored backgrounds (like green) to black on white
+            // This handles white bars on dark/colored backgrounds
             for (let i = 0; i < data.length; i += 4) {
-              // Invert colors
-              const r = 255 - data[i];
-              const g = 255 - data[i + 1];
-              const b = 255 - data[i + 2];
+              const r = data[i];
+              const g = data[i + 1];
+              const b = data[i + 2];
               
-              // Enhance contrast for better detection
-              const contrast = 1.5;
-              const factor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255));
-              data[i] = Math.max(0, Math.min(255, factor * (r - 128) + 128));     // R
-              data[i + 1] = Math.max(0, Math.min(255, factor * (g - 128) + 128)); // G
-              data[i + 2] = Math.max(0, Math.min(255, factor * (b - 128) + 128)); // B
+              // Calculate luminance to detect bright (white) vs dark (background) areas
+              const luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+              
+              // If pixel is bright (white bar), make it black
+              // If pixel is dark (colored background like green), make it white
+              if (luminance > 128) {
+                // Bright pixel (white bar) -> make it black
+                data[i] = 0;     // R
+                data[i + 1] = 0; // G
+                data[i + 2] = 0; // B
+              } else {
+                // Dark pixel (colored background) -> make it white
+                data[i] = 255;     // R
+                data[i + 1] = 255; // G
+                data[i + 2] = 255; // B
+              }
               // Alpha stays the same
             }
             
@@ -783,9 +792,7 @@ export default function ScannerDashboard() {
               playsInline
               onClick={handleVideoClick}
               style={{ 
-                cursor: 'pointer',
-                // Enhanced contrast and brightness for better barcode detection (both normal and inverted)
-                filter: 'contrast(1.5) brightness(1.3) saturate(1.3)'
+                cursor: 'pointer'
               }}
             />
             {/* Enhanced scanning overlay with focus region */}
