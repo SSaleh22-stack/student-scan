@@ -300,11 +300,99 @@ export default function ScannerDashboard() {
       const canvas = document.createElement('canvas');
       const canvasContext = canvas.getContext('2d', { willReadFrequently: true });
       
+      // Store scanning state for cleanup
+      (codeReaderRef.current as any)._isScanningActive = true;
+      
+      // Parallel inverted barcode checker - runs every 200ms
+      const checkInvertedBarcode = async () => {
+        if (!(codeReaderRef.current as any)?._isScanningActive || !videoRef.current || !canvasContext) return;
+        
+        try {
+          const video = videoRef.current;
+          if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Draw video frame to canvas
+            canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Get image data
+            const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // Invert colors for inverted barcode detection
+            for (let i = 0; i < imageData.data.length; i += 4) {
+              imageData.data[i] = 255 - imageData.data[i];     // R
+              imageData.data[i + 1] = 255 - imageData.data[i + 1]; // G
+              imageData.data[i + 2] = 255 - imageData.data[i + 2]; // B
+            }
+            
+            // Put inverted data back to canvas
+            canvasContext.putImageData(imageData, 0, 0);
+            
+            // Convert canvas to image for decoding
+            const invertedImage = new Image();
+            invertedImage.src = canvas.toDataURL();
+            
+            // Wait for image to load
+            await new Promise((resolve) => {
+              invertedImage.onload = resolve;
+              if (invertedImage.complete) resolve(null);
+            });
+            
+            // Try to decode inverted barcode
+            try {
+              const invertedResult = await codeReader.decodeFromImageElement(invertedImage);
+              if (invertedResult) {
+                const studentNumber = invertedResult.getText();
+                const now = Date.now();
+                
+                // Prevent duplicate scans
+                if (studentNumber === lastScannedNumber && (now - lastScanTime) < 300) {
+                  return;
+                }
+                
+                lastScannedNumber = studentNumber;
+                lastScanTime = now;
+                setTimeout(() => {
+                  lastScannedNumber = '';
+                }, 300);
+                
+                // Play sound immediately
+                playScanSound();
+                // Show popup with result
+                setLastScanned(studentNumber);
+                setShowScanResult(true);
+                setTimeout(() => {
+                  setShowScanResult(false);
+                }, 1000);
+                // Process the scan (non-blocking)
+                handleScan(studentNumber).catch(() => {
+                  // Silent error handling - don't block scanning
+                });
+              }
+            } catch (invertedError) {
+              // Inverted scan failed, continue
+            }
+          }
+        } catch (canvasError) {
+          // Canvas processing failed, continue scanning
+        }
+        
+        // Continue checking inverted barcodes
+        if ((codeReaderRef.current as any)?._isScanningActive) {
+          setTimeout(checkInvertedBarcode, 200);
+        }
+      };
+      
+      // Start parallel inverted barcode checker
+      setTimeout(checkInvertedBarcode, 500);
+      
       // Use decodeFromVideoDevice with the selected device ID for better detection
       await codeReader.decodeFromVideoDevice(
         selectedDeviceId,
         videoRef.current,
-        async (result: any, err: any) => {
+        async (result: any, _err: any) => {
           if (result) {
             const studentNumber = result.getText();
             const now = Date.now();
@@ -335,82 +423,7 @@ export default function ScannerDashboard() {
             });
             // Continue scanning immediately
           }
-          // If normal scan fails, try inverted barcode (white on dark)
-          else if (err && err.name === 'NotFoundException' && videoRef.current && canvasContext) {
-            try {
-              const video = videoRef.current;
-              if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
-                // Set canvas size to match video
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                
-                // Draw video frame to canvas
-                canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                // Get image data
-                const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
-                
-                // Invert colors for inverted barcode detection
-                for (let i = 0; i < imageData.data.length; i += 4) {
-                  imageData.data[i] = 255 - imageData.data[i];     // R
-                  imageData.data[i + 1] = 255 - imageData.data[i + 1]; // G
-                  imageData.data[i + 2] = 255 - imageData.data[i + 2]; // B
-                  // Alpha stays the same
-                }
-                
-                // Put inverted data back to canvas
-                canvasContext.putImageData(imageData, 0, 0);
-                
-                // Convert canvas to image for decoding
-                const invertedImage = new Image();
-                invertedImage.src = canvas.toDataURL();
-                
-                // Wait for image to load
-                await new Promise((resolve) => {
-                  invertedImage.onload = resolve;
-                  if (invertedImage.complete) resolve(null);
-                });
-                
-                // Try to decode inverted barcode
-                try {
-                  const invertedResult = await codeReader.decodeFromImageElement(invertedImage);
-                  if (invertedResult) {
-                    const studentNumber = invertedResult.getText();
-                    const now = Date.now();
-                    
-                    // Prevent duplicate scans
-                    if (studentNumber === lastScannedNumber && (now - lastScanTime) < 300) {
-                      return;
-                    }
-                    
-                    lastScannedNumber = studentNumber;
-                    lastScanTime = now;
-                    setTimeout(() => {
-                      lastScannedNumber = '';
-                    }, 300);
-                    
-                    // Play sound immediately
-                    playScanSound();
-                    // Show popup with result
-                    setLastScanned(studentNumber);
-                    setShowScanResult(true);
-                    setTimeout(() => {
-                      setShowScanResult(false);
-                    }, 1000);
-                    // Process the scan (non-blocking)
-                    handleScan(studentNumber).catch(() => {
-                      // Silent error handling - don't block scanning
-                    });
-                  }
-                } catch (invertedError) {
-                  // Inverted scan also failed, continue
-                }
-              }
-            } catch (canvasError) {
-              // Canvas processing failed, continue scanning
-            }
-          }
-          // Other errors are normal when no barcode is visible - ignore them
+          // Errors are normal when no barcode is visible - ignore them
         }
       );
     } catch (err) {
@@ -426,6 +439,10 @@ export default function ScannerDashboard() {
   };
 
   const stopScanning = () => {
+    // Stop inverted barcode checker
+    if (codeReaderRef.current) {
+      (codeReaderRef.current as any)._isScanningActive = false;
+    }
     if (codeReaderRef.current) {
       codeReaderRef.current.reset();
       codeReaderRef.current = null;
