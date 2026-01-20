@@ -268,35 +268,31 @@ export default function ScannerDashboard() {
         throw new Error('Could not determine camera device. Please try again.');
       }
 
-      // Configure for maximum barcode detection with aggressive settings
+      // Configure for fast barcode detection - optimized for CODE128
       const hints = new Map();
-      hints.set(DecodeHintType.TRY_HARDER, true); // Enable for better detection quality
+      hints.set(DecodeHintType.TRY_HARDER, false); // Disable for faster scanning
       hints.set(DecodeHintType.ASSUME_GS1, false);
       hints.set(DecodeHintType.CHARACTER_SET, 'UTF-8');
-      // Allow surrounding content for better detection
-      hints.set(DecodeHintType.PURE_BARCODE, false);
+      // Focus on pure barcode for faster detection
+      hints.set(DecodeHintType.PURE_BARCODE, true); // Enable for faster detection
+      // Prioritize CODE128 since that's what we generate
       hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-        BarcodeFormat.CODE_128,  // Most common, check first
-        BarcodeFormat.CODE_39,
+        BarcodeFormat.CODE_128,  // Primary format - check first
+        BarcodeFormat.CODE_39,   // Secondary
         BarcodeFormat.EAN_13,
         BarcodeFormat.EAN_8,
         BarcodeFormat.UPC_A,
         BarcodeFormat.UPC_E,
         BarcodeFormat.ITF,
-        BarcodeFormat.CODABAR,
-        BarcodeFormat.QR_CODE,
-        BarcodeFormat.DATA_MATRIX,
-        BarcodeFormat.PDF_417,
-        BarcodeFormat.AZTEC
+        BarcodeFormat.CODABAR
       ]);
       
-      // Set hints for maximum detection capability
+      // Set hints for fast detection
       codeReader.hints = hints;
       
-      // Much slower scanning interval for maximum detection of difficult barcodes
-      // More time per frame = better analysis and multiple attempts
-      // Increased to 800ms for very difficult barcodes
-      (codeReader as any).timeBetweenDecodingAttempts = 800;
+      // Fast scanning interval for quick detection
+      // Reduced from 800ms to 100ms for much faster scanning
+      (codeReader as any).timeBetweenDecodingAttempts = 100;
 
       // Use continuous scanning optimized for fast multiple scans
       let lastScannedNumber = '';
@@ -592,28 +588,76 @@ export default function ScannerDashboard() {
               onClick={handleVideoClick}
               style={{ 
                 cursor: 'pointer',
-                // Enhance contrast and brightness for better barcode detection
-                filter: 'contrast(1.2) brightness(1.1) saturate(1.1)'
+                // Enhanced contrast and brightness for better barcode detection
+                filter: 'contrast(1.4) brightness(1.2) saturate(1.2)'
               }}
             />
-            {/* Scanning line overlay */}
+            {/* Enhanced scanning overlay with focus region */}
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              {/* Scanning line */}
+              {/* Scanning region box - guides user to center */}
               <div 
-                className="w-full h-1 bg-green-500 opacity-75 animate-pulse" 
+                className="absolute border-3 border-green-400 rounded-lg"
                 style={{
-                  boxShadow: '0 0 20px rgba(34, 197, 94, 0.9)'
+                  width: '80%',
+                  maxWidth: '500px',
+                  height: '200px',
+                  borderStyle: 'solid',
+                  borderWidth: '3px',
+                  boxShadow: '0 0 30px rgba(34, 197, 94, 0.8), inset 0 0 30px rgba(34, 197, 94, 0.3)',
+                  opacity: 0.9
+                }}
+              >
+                {/* Corner indicators */}
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-500 rounded-tl-lg"></div>
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-500 rounded-tr-lg"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-500 rounded-bl-lg"></div>
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-500 rounded-br-lg"></div>
+              </div>
+              
+              {/* Prominent scanning line in the middle */}
+              <div 
+                className="absolute w-full h-2 bg-gradient-to-r from-transparent via-green-500 to-transparent"
+                style={{
+                  boxShadow: '0 0 40px rgba(34, 197, 94, 1), 0 0 80px rgba(34, 197, 94, 0.6)',
+                  animation: 'scanLine 2s ease-in-out infinite',
+                  zIndex: 10
                 }}
               ></div>
-              {/* Corner guides */}
+              
+              {/* Animated scanning beam effect */}
               <div 
-                className="absolute inset-0 border-4 border-green-500" 
+                className="absolute w-full h-1 bg-green-400"
                 style={{
-                  borderStyle: 'dashed',
-                  opacity: 0.7
+                  boxShadow: '0 0 30px rgba(34, 197, 94, 1)',
+                  animation: 'scanBeam 1.5s ease-in-out infinite',
+                  opacity: 0.8
                 }}
               ></div>
             </div>
+            
+            {/* Add CSS animations */}
+            <style>{`
+              @keyframes scanLine {
+                0%, 100% {
+                  opacity: 0.8;
+                  transform: translateY(0);
+                }
+                50% {
+                  opacity: 1;
+                  transform: translateY(-2px);
+                }
+              }
+              @keyframes scanBeam {
+                0%, 100% {
+                  opacity: 0.6;
+                  transform: scaleX(1);
+                }
+                50% {
+                  opacity: 1;
+                  transform: scaleX(1.05);
+                }
+              }
+            `}</style>
           </div>
 
           {/* Scan Result Popup */}
@@ -684,21 +728,32 @@ export default function ScannerDashboard() {
                 style={{ display: scanning ? 'block' : 'none' }}
               />
               {scanning && (
-                <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                  {/* Scanning line overlay */}
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center rounded-lg">
+                  {/* Scanning region box */}
                   <div 
-                    className="w-full h-1 bg-green-500 opacity-75 animate-pulse" 
+                    className="absolute border-2 border-green-400 rounded-lg"
                     style={{
-                      boxShadow: '0 0 10px rgba(34, 197, 94, 0.8)'
+                      width: '85%',
+                      height: '60%',
+                      borderStyle: 'solid',
+                      boxShadow: '0 0 20px rgba(34, 197, 94, 0.7), inset 0 0 20px rgba(34, 197, 94, 0.2)',
+                      opacity: 0.9
                     }}
-                  ></div>
-                  {/* Corner guides */}
+                  >
+                    {/* Corner indicators */}
+                    <div className="absolute top-0 left-0 w-6 h-6 border-t-3 border-l-3 border-green-500 rounded-tl-lg"></div>
+                    <div className="absolute top-0 right-0 w-6 h-6 border-t-3 border-r-3 border-green-500 rounded-tr-lg"></div>
+                    <div className="absolute bottom-0 left-0 w-6 h-6 border-b-3 border-l-3 border-green-500 rounded-bl-lg"></div>
+                    <div className="absolute bottom-0 right-0 w-6 h-6 border-b-3 border-r-3 border-green-500 rounded-br-lg"></div>
+                  </div>
+                  
+                  {/* Prominent scanning line */}
                   <div 
-                    className="absolute inset-0 border-2 border-green-500 rounded-lg" 
+                    className="absolute w-full h-1.5 bg-gradient-to-r from-transparent via-green-500 to-transparent"
                     style={{
-                      borderStyle: 'dashed',
-                      borderWidth: '2px',
-                      opacity: 0.6
+                      boxShadow: '0 0 20px rgba(34, 197, 94, 1), 0 0 40px rgba(34, 197, 94, 0.5)',
+                      animation: 'scanLine 2s ease-in-out infinite',
+                      zIndex: 10
                     }}
                   ></div>
                 </div>
