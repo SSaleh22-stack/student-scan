@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+// @ts-ignore - jsbarcode doesn't have perfect TypeScript support
 import JsBarcode from 'jsbarcode';
 
 export default function StudentCard() {
@@ -26,7 +27,7 @@ export default function StudentCard() {
           background: '#ffffff', // White background for maximum contrast
           lineColor: '#000000', // Pure black bars for maximum contrast
           // Additional settings for better scannability
-          valid: function(valid) {
+          valid: function(valid: boolean) {
             if (!valid) {
               console.error('Invalid barcode data');
             }
