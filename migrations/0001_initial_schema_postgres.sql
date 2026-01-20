@@ -61,3 +61,4 @@ VALUES (
   true
 ) ON CONFLICT (id) DO UPDATE SET is_active = true;
 
+

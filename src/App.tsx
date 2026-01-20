@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import ScannerDashboard from './pages/ScannerDashboard';
+import StudentCard from './pages/StudentCard';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -32,6 +33,10 @@ function AppRoutes() {
         element={
           user?.role === 'SCANNER' ? <ScannerDashboard /> : <Navigate to="/login" />
         }
+      />
+      <Route
+        path="/card"
+        element={<StudentCard />}
       />
       <Route path="/" element={<Navigate to="/login" />} />
     </Routes>
