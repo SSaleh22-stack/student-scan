@@ -268,12 +268,12 @@ export default function ScannerDashboard() {
         throw new Error('Could not determine camera device. Please try again.');
       }
 
-      // Configure for ultra-fast barcode detection with inverted barcode support
+      // Configure for fast barcode detection - optimized for CODE128 and inverted barcodes
       const hints = new Map();
-      hints.set(DecodeHintType.TRY_HARDER, false); // Disable for faster scanning
+      hints.set(DecodeHintType.TRY_HARDER, true); // Enable for better detection (including inverted)
       hints.set(DecodeHintType.ASSUME_GS1, false);
       hints.set(DecodeHintType.CHARACTER_SET, 'UTF-8');
-      hints.set(DecodeHintType.PURE_BARCODE, false); // Allow surrounding content for inverted barcodes
+      hints.set(DecodeHintType.PURE_BARCODE, false); // Allow surrounding content for better detection
       // Prioritize CODE128 since that's what we generate
       hints.set(DecodeHintType.POSSIBLE_FORMATS, [
         BarcodeFormat.CODE_128,  // Primary format - check first
@@ -289,162 +289,130 @@ export default function ScannerDashboard() {
       // Set hints for fast detection
       codeReader.hints = hints;
       
-      // Ultra-fast scanning - use continuous mode (0ms interval)
-      (codeReader as any).timeBetweenDecodingAttempts = 0;
+      // Fast scanning interval - reduced to 50ms for very fast detection
+      (codeReader as any).timeBetweenDecodingAttempts = 50;
 
-      // Use canvas for frame processing to handle inverted barcodes
+      // Use continuous scanning optimized for fast multiple scans
+      let lastScannedNumber = '';
+      let lastScanTime = 0;
+      
+      // Canvas for inverted barcode detection
       const canvas = document.createElement('canvas');
       const canvasContext = canvas.getContext('2d', { willReadFrequently: true });
-      const invertedCanvas = document.createElement('canvas');
-      const invertedContext = invertedCanvas.getContext('2d', { willReadFrequently: true });
-      if (!canvasContext || !invertedContext) {
-        throw new Error('Canvas context not available');
-      }
-
-      // Use continuous scanning optimized for fast multiple scans with inverted support
-      let lastScannedNumber = '';
-      let scanCooldown = false;
-      let isScanning = true;
       
-      // Function to process frame and try both normal and inverted
-      const processFrame = async () => {
-        if (!isScanning || !videoRef.current || !canvasContext || !invertedContext) return;
-        
-        try {
-          const video = videoRef.current;
-          if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
-            // Set canvas size to match video
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            invertedCanvas.width = video.videoWidth;
-            invertedCanvas.height = video.videoHeight;
+      // Use decodeFromVideoDevice with the selected device ID for better detection
+      await codeReader.decodeFromVideoDevice(
+        selectedDeviceId,
+        videoRef.current,
+        async (result: any, err: any) => {
+          if (result) {
+            const studentNumber = result.getText();
+            const now = Date.now();
             
-            // Draw video frame to canvas
-            canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Prevent duplicate scans within 300ms
+            if (studentNumber === lastScannedNumber && (now - lastScanTime) < 300) {
+              return;
+            }
             
-            // Get image data
-            const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
+            lastScannedNumber = studentNumber;
+            lastScanTime = now;
+            setTimeout(() => {
+              lastScannedNumber = '';
+            }, 300); // Reduced cooldown for faster scanning
             
-            // Try normal barcode first (faster) - convert canvas to image
-            const normalImage = new Image();
-            normalImage.src = canvas.toDataURL();
-            
+            // Play sound immediately
+            playScanSound();
+            // Show popup with result
+            setLastScanned(studentNumber);
+            setShowScanResult(true);
+            // Auto-hide popup after 1 second for faster scanning
+            setTimeout(() => {
+              setShowScanResult(false);
+            }, 1000);
+            // Process the scan (non-blocking)
+            handleScan(studentNumber).catch(() => {
+              // Silent error handling - don't block scanning
+            });
+            // Continue scanning immediately
+          }
+          // If normal scan fails, try inverted barcode (white on dark)
+          else if (err && err.name === 'NotFoundException' && videoRef.current && canvasContext) {
             try {
-              await new Promise((resolve) => {
-                normalImage.onload = resolve;
-                if (normalImage.complete) resolve(null);
-              });
-              
-              const result = await codeReader.decodeFromImageElement(normalImage);
-              if (result) {
-                const studentNumber = result.getText();
+              const video = videoRef.current;
+              if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+                // Set canvas size to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
                 
-                // Prevent duplicate scans
-                if (studentNumber === lastScannedNumber && scanCooldown) {
-                  requestAnimationFrame(processFrame);
-                  return;
-                }
+                // Draw video frame to canvas
+                canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                lastScannedNumber = studentNumber;
-                scanCooldown = true;
-                setTimeout(() => {
-                  scanCooldown = false;
-                  lastScannedNumber = '';
-                }, 500); // Reduced cooldown for faster scanning
+                // Get image data
+                const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
                 
-                // Play sound immediately
-                playScanSound();
-                // Show popup with result
-                setLastScanned(studentNumber);
-                setShowScanResult(true);
-                // Auto-hide popup after 1 second for faster scanning
-                setTimeout(() => {
-                  setShowScanResult(false);
-                }, 1000);
-                // Process the scan (non-blocking)
-                handleScan(studentNumber).catch(() => {
-                  // Silent error handling - don't block scanning
-                });
-                requestAnimationFrame(processFrame);
-                return;
-              }
-            } catch (normalError) {
-              // If normal fails, try inverted barcode (white on dark)
-              try {
                 // Invert colors for inverted barcode detection
-                const invertedData = invertedContext.createImageData(canvas.width, canvas.height);
                 for (let i = 0; i < imageData.data.length; i += 4) {
-                  invertedData.data[i] = 255 - imageData.data[i];     // R
-                  invertedData.data[i + 1] = 255 - imageData.data[i + 1]; // G
-                  invertedData.data[i + 2] = 255 - imageData.data[i + 2]; // B
-                  invertedData.data[i + 3] = imageData.data[i + 3];      // A
+                  imageData.data[i] = 255 - imageData.data[i];     // R
+                  imageData.data[i + 1] = 255 - imageData.data[i + 1]; // G
+                  imageData.data[i + 2] = 255 - imageData.data[i + 2]; // B
+                  // Alpha stays the same
                 }
                 
-                // Put inverted data back to inverted canvas
-                invertedContext.putImageData(invertedData, 0, 0);
+                // Put inverted data back to canvas
+                canvasContext.putImageData(imageData, 0, 0);
                 
-                // Convert inverted canvas to image
+                // Convert canvas to image for decoding
                 const invertedImage = new Image();
-                invertedImage.src = invertedCanvas.toDataURL();
+                invertedImage.src = canvas.toDataURL();
                 
+                // Wait for image to load
                 await new Promise((resolve) => {
                   invertedImage.onload = resolve;
                   if (invertedImage.complete) resolve(null);
                 });
                 
-                const result = await codeReader.decodeFromImageElement(invertedImage);
-                if (result) {
-                  const studentNumber = result.getText();
-                  
-                  // Prevent duplicate scans
-                  if (studentNumber === lastScannedNumber && scanCooldown) {
-                    requestAnimationFrame(processFrame);
-                    return;
+                // Try to decode inverted barcode
+                try {
+                  const invertedResult = await codeReader.decodeFromImageElement(invertedImage);
+                  if (invertedResult) {
+                    const studentNumber = invertedResult.getText();
+                    const now = Date.now();
+                    
+                    // Prevent duplicate scans
+                    if (studentNumber === lastScannedNumber && (now - lastScanTime) < 300) {
+                      return;
+                    }
+                    
+                    lastScannedNumber = studentNumber;
+                    lastScanTime = now;
+                    setTimeout(() => {
+                      lastScannedNumber = '';
+                    }, 300);
+                    
+                    // Play sound immediately
+                    playScanSound();
+                    // Show popup with result
+                    setLastScanned(studentNumber);
+                    setShowScanResult(true);
+                    setTimeout(() => {
+                      setShowScanResult(false);
+                    }, 1000);
+                    // Process the scan (non-blocking)
+                    handleScan(studentNumber).catch(() => {
+                      // Silent error handling - don't block scanning
+                    });
                   }
-                  
-                  lastScannedNumber = studentNumber;
-                  scanCooldown = true;
-                  setTimeout(() => {
-                    scanCooldown = false;
-                    lastScannedNumber = '';
-                  }, 500);
-                  
-                  // Play sound immediately
-                  playScanSound();
-                  // Show popup with result
-                  setLastScanned(studentNumber);
-                  setShowScanResult(true);
-                  setTimeout(() => {
-                    setShowScanResult(false);
-                  }, 1000);
-                  // Process the scan (non-blocking)
-                  handleScan(studentNumber).catch(() => {
-                    // Silent error handling - don't block scanning
-                  });
+                } catch (invertedError) {
+                  // Inverted scan also failed, continue
                 }
-              } catch (invertedError) {
-                // Both failed, continue scanning
               }
+            } catch (canvasError) {
+              // Canvas processing failed, continue scanning
             }
           }
-        } catch (err) {
-          // Continue scanning on error
+          // Other errors are normal when no barcode is visible - ignore them
         }
-        
-        // Continue scanning at maximum speed
-        if (isScanning) {
-          // Process every frame for maximum speed
-          requestAnimationFrame(processFrame);
-        }
-      };
-      
-      // Start continuous frame processing
-      processFrame();
-      
-      // Store cleanup function
-      (codeReaderRef.current as any)._stopScanning = () => {
-        isScanning = false;
-      };
+      );
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to start camera';
       setError(errorMessage);
@@ -458,10 +426,6 @@ export default function ScannerDashboard() {
   };
 
   const stopScanning = () => {
-    // Stop continuous scanning loop
-    if (codeReaderRef.current && (codeReaderRef.current as any)._stopScanning) {
-      (codeReaderRef.current as any)._stopScanning();
-    }
     if (codeReaderRef.current) {
       codeReaderRef.current.reset();
       codeReaderRef.current = null;
